@@ -25,7 +25,9 @@ export const shareScore = (video: VideoItem) => Math.round((video.likeCount ?? v
 
 export const velocityNumber = (video: VideoItem) => Number(video.velocity.replace('+', '').replace('K/h', '')) * 1000;
 
-export const formatCompact = (value: number) => value >= 1000000
+export const formatCompact = (value: number) => value >= 1000000000
+  ? `${(value / 1000000000).toFixed(1)}B`
+  : value >= 1000000
   ? `${(value / 1000000).toFixed(value >= 10000000 ? 0 : 1)}M`
   : value >= 1000
     ? `${Math.round(value / 1000)}K`
