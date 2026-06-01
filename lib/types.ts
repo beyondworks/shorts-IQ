@@ -6,10 +6,11 @@ export type BreakoutSignal = {
   score: number; // 0~100
   grade: BreakoutGrade;
   subscriberMultiple: number | null; // 구독자 대비 조회수 배율
-  outlier: number | null; // peer-group 중앙값 대비 배율
+  outlier: number | null; // 채택된 outlier 배율(채널-자기 우선, 없으면 니치 또래)
+  outlierSource: 'channel' | 'niche' | null; // outlier 출처 — 'channel'=이 채널 평소 대비(1순위), 'niche'=또래 대비
   freshVph: number; // 신선도 가중 시간당 조회수
   ageHours: number;
-  // 신뢰도(축의 '질' 기준): 1순위 outlier(또래 대비 실측) 보유 = high,
+  // 신뢰도(축의 '질' 기준): 1순위 outlier(채널 평소 또는 또래 대비 실측) 보유 = high,
   // 없고 노이즈 큰 VSR(구독자 대비)만 = medium, 둘 다 없어 velocity(절대 인기)만 = low(가짜 확신 금지).
   confidence: 'high' | 'medium' | 'low';
   measured: { subscriberMultiple: boolean; outlier: boolean };
@@ -46,6 +47,9 @@ export type VideoItem = {
   subscriberCount?: number;
   channelId?: string;
   channelPublishedAt?: string;
+  channelMedianViews?: number; // 이 채널 최근 영상 조회수 중앙값(채널 평소) — 채널-자기 배율 baseline
+  channelSampleSize?: number; // 위 중앙값을 낸 표본 수(신뢰도 판단용)
+  channelBaselineAt?: string; // 채널 baseline 수집 시각
   metricsProxy?: boolean;
   breakout?: BreakoutSignal; // 런타임 파생 (랭킹/표시용)
   rankDelta?: number | null; // 직전 샘플 대비 랭킹 변동 (양수=상승). null=신규/추적 부족

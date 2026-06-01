@@ -110,13 +110,23 @@ export const breakoutSignal = (video: VideoItem, peers: VideoItem[]): BreakoutSi
   const subscriberMultiple = sub != null && sub > 0 ? video.viewCount / Math.max(sub, SUBSCRIBER_FLOOR) : null;
   const subScore = subscriberMultiple != null ? clamp01(Math.log10(Math.max(subscriberMultiple, 0.1)) / 2.5) : null;
 
-  // 2) peer 대비 outlier — log10 (×2≈주목, ×8≈급상승, ×30+≈폭발). 10^1.5≈31배에서 만점.
-  //    또래보다 '덜 본' 영상(<1배)은 더 가파른 음성(÷0.6)으로 눌러 velocity가 못 떠받치게(정직성).
+  // 2) outlier — '기대보다 얼마나 터졌나'. baseline 두 종류 중 채택:
+  //    ① 채널-자기(이 채널 최근 평소 대비, North Star 1순위·채널 규모 보정·robust) 우선
+  //    ② 없으면 니치 또래(같은 카테고리+연령대) — sparse 니치는 여기서 null이라 ①이 medium 공백을 메운다.
+  //    배율 상한 100× (업계도 6~100×). 평소보다 '덜 본' 영상(<1배)은 가파른 음성(÷0.6)으로 눌러 velocity가 못 떠받치게.
+  const chanMed = video.channelMedianViews;
+  // 채널-자기는 robust baseline(실제 15개 영상)이라 높은 배율도 허수 아님 → 상한 300×.
+  const channelOutlier = chanMed != null && chanMed > 0 && (video.channelSampleSize ?? 0) >= 5
+    ? Math.min(video.viewCount / chanMed, 300) : null;
+  // 니치는 sparse 위험 → 100× 상한 유지(artifact 차단).
   const baseline = computeBaseline(peers, video);
-  // 배율 상한 100× — 업계(1of10 등)도 실제 outlier를 6~100×로 본다. 그 이상은 baseline artifact라 신뢰 불가.
-  const outlier = baseline && baseline > 0 ? Math.min(video.viewCount / baseline, 100) : null;
+  const nicheOutlier = baseline && baseline > 0 ? Math.min(video.viewCount / baseline, 100) : null;
+  const outlier = channelOutlier ?? nicheOutlier;
+  const outlierSource: BreakoutSignal['outlierSource'] = channelOutlier != null ? 'channel' : nicheOutlier != null ? 'niche' : null;
+  // 양성 배율은 ÷2.5로 316×에서 만점 — 채널-자기 분포(p50 24×, 다수 100×+)를 변별력 있게 펼친다.
+  // 음성(<1배, 평소 미달)은 ÷0.6으로 가파르게 눌러 velocity가 못 떠받치게.
   const outRaw = outlier != null ? Math.log10(Math.max(outlier, 0.01)) : null;
-  const rawOutScore = outRaw == null ? null : outRaw >= 0 ? clamp(outRaw / 1.5, 0, 1) : clamp(outRaw / 0.6, -1, 0);
+  const rawOutScore = outRaw == null ? null : outRaw >= 0 ? clamp(outRaw / 2.5, 0, 1) : clamp(outRaw / 0.6, -1, 0);
   // outlier-VSR 충돌 처리: 또래 평균엔 못 미쳐도(음수) 구독 대비 폭발(VSR≥30)한 '최근(30일 내)' 작은 채널은
   // 음수 페널티로 죽이지 않는다 — North Star 1차 신호(구독자 대비 배율) 보호. 단 0(중립)까지만, 가산 금지(과인증 방지).
   // 연령 게이트(<30일=이번달 창): 수년 된 영상의 VSR은 누적이라 '지금 터짐'이 아니므로 rescue 제외(Steady 유지).
@@ -150,13 +160,15 @@ export const breakoutSignal = (video: VideoItem, peers: VideoItem[]): BreakoutSi
   // (특정 기간만 보려면 기간 필터로 정밀 제어 — 기본 랭킹은 최근 쪽으로 기운다.)
   // 신선도는 점수를 전역으로 짓누르는 승수가 아니라 완만한 할인(0.6~1.0)으로만 — 과거 터짐 보존.
   const score = Math.round(clamp01(blended * (0.6 + 0.4 * freshness)) * 100);
-  const grade: BreakoutSignal['grade'] = score >= 70 ? 'Breakout' : score >= 52 ? 'Surging' : score >= 34 ? 'Notable' : 'Steady';
+  // 임계는 채널-자기 배율 기준 절대값: ~100×+(폭발)/~30×+(급상승)/~7×+(주목)/그 미만(안정).
+  const grade: BreakoutSignal['grade'] = score >= 80 ? 'Breakout' : score >= 64 ? 'Surging' : score >= 44 ? 'Notable' : 'Steady';
 
   return {
     score,
     grade,
     subscriberMultiple,
     outlier,
+    outlierSource,
     freshVph,
     ageHours: videoAge,
     confidence,
