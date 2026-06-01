@@ -4,9 +4,9 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Activity, Archive, BarChart3, Bookmark, Check, ChevronDown, Download, Eye, Filter,
+  Activity, Archive, BarChart3, Check, ChevronDown, Download, Filter,
   Folder, LayoutDashboard, Library, MoreHorizontal, Play, Search,
-  Sparkles, Star, TimerReset, X, ArrowLeft, Scissors, ShieldCheck, SlidersHorizontal, AlertTriangle, FileVideo, ScanLine, Waves, Fingerprint,
+  Sparkles, Star, TimerReset, X, ArrowLeft, ShieldCheck, SlidersHorizontal, AlertTriangle, FileVideo, ScanLine, Waves, Fingerprint,
 } from 'lucide-react';
 import { categoryOptions, templateOptions } from '../lib/catalog';
 import {
@@ -46,7 +46,7 @@ const filterSummary = (filters: DiscoveryFilters) => Object.values(filters).join
 const uploadWindowHours = (window: DiscoveryFilters['uploaded']) => window === '실시간' ? 1 : window === '업로드 24h' ? 24 : window === '업로드 3일' ? 72 : window === '14일' ? 336 : window === '30일' ? 720 : window === '60일' ? 1440 : window === '90일' ? 2160 : window === '180일' ? 4320 : window === '1년 이상' ? Infinity : Infinity;
 // 채널규모 필터의 구독자 상한값. '전체 규모'면 null(제한 없음).
 const subscriberBound = (scale: DiscoveryFilters['subscribers']): number | null => scale === '소형 1만↓' ? 10000 : scale === '중형 10만↓' ? 100000 : scale === '대형 제외 100만↓' ? 1000000 : null;
-type PageKind = 'dashboard' | 'rankings' | 'saved' | 'folders' | 'downloads' | 'match' | 'video-detail';
+type PageKind = 'dashboard' | 'rankings' | 'saved' | 'folders' | 'downloads' | 'match';
 type ActionName = 'sync' | 'save' | 'folder' | 'download' | 'match' | 'ingest' | 'youtube' | null;
 
 const videoQueryParams = (category: string, template: string, filters: DiscoveryFilters, query: string) => {
@@ -109,10 +109,6 @@ export function PrototypeApp({ page = 'dashboard', videoId }: { page?: PageKind;
   const [serverQueryUrl, setServerQueryUrl] = useState('/api/videos');
   const [discoveryLoading, setDiscoveryLoading] = useState(false);
   const [discoveryError, setDiscoveryError] = useState<string | null>(null);
-  const [detailVideo, setDetailVideo] = useState<VideoItem | null>(null);
-  const [detailLoading, setDetailLoading] = useState(page === 'video-detail' && Boolean(videoId));
-  const [detailError, setDetailError] = useState<string | null>(null);
-  const [detailMissingId, setDetailMissingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (initialQueryApplied.current || typeof window === 'undefined') return;
@@ -133,15 +129,7 @@ export function PrototypeApp({ page = 'dashboard', videoId }: { page?: PageKind;
 
   const applyState = (nextState: AppState, preferredId?: string) => {
     setAppState(nextState);
-    if (page === 'video-detail' && videoId) {
-      const nextDetail = nextState.videos.find((video) => video.id === videoId);
-      if (nextDetail) {
-        setDetailVideo(nextDetail);
-        setDetailMissingId(null);
-      }
-    }
     setSelectedId((current) => {
-      if (page === 'video-detail' && videoId) return videoId;
       const nextId = preferredId ?? current ?? videoId ?? '';
       if (nextState.videos.some((video) => video.id === nextId)) return nextId;
       if (videoId && nextState.videos.some((video) => video.id === videoId)) return videoId;
@@ -172,61 +160,6 @@ export function PrototypeApp({ page = 'dashboard', videoId }: { page?: PageKind;
     if (videoId) setSelectedId(videoId);
   }, [videoId]);
 
-  useEffect(() => {
-    if (page !== 'video-detail' || !videoId) {
-      setDetailVideo(null);
-      setDetailMissingId(null);
-      setDetailError(null);
-      setDetailLoading(false);
-      return;
-    }
-
-    let cancelled = false;
-    setDetailLoading(true);
-    setDetailError(null);
-    setDetailMissingId(null);
-
-    fetch(`/api/videos/${encodeURIComponent(videoId)}`, { cache: 'no-store' })
-      .then(async (response) => {
-        if (response.status === 404) {
-          const body = await response.json().catch(() => ({}));
-          return { missing: true, error: String(body.error ?? `Video not found: ${videoId}`) } as const;
-        }
-        if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
-        const body = await response.json() as VideoItem | { video: VideoItem };
-        return { video: 'video' in body ? body.video : body } as const;
-      })
-      .then((result) => {
-        if (cancelled) return;
-        if ('missing' in result) {
-          setDetailVideo(null);
-          setDetailMissingId(videoId);
-          setDetailError(null);
-          setActionMessage(`상세 API 404: /api/videos/${videoId}`);
-          return;
-        }
-        setDetailVideo(result.video);
-        setSelectedId(result.video.id);
-        setAppState((current) => current ? {
-          ...current,
-          videos: current.videos.some((video) => video.id === result.video.id)
-            ? current.videos.map((video) => video.id === result.video.id ? result.video : video)
-            : [...current.videos, result.video],
-        } : current);
-        setActionMessage(`상세 API 확인: /api/videos/${videoId}`);
-      })
-      .catch((error) => {
-        if (!cancelled) setDetailError(`GET /api/videos/${videoId} 실패: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
-      })
-      .finally(() => {
-        if (!cancelled) setDetailLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [page, videoId]);
-
   const postState = async (action: Exclude<ActionName, null>, url: string, body?: unknown, optimistic?: (prev: AppState) => AppState, successMessage = '변경 사항이 저장되었습니다.', method = 'POST') => {
     if (!appState) return false;
     const previous = appState;
@@ -253,9 +186,7 @@ export function PrototypeApp({ page = 'dashboard', videoId }: { page?: PageKind;
   const folders = appState?.folders ?? [];
   const downloads = appState?.downloads ?? [];
   const matchReports = appState?.matchReports ?? [];
-  const selected = page === 'video-detail' && videoId
-    ? detailVideo ?? (detailMissingId ? undefined : videoState.find((video) => video.id === videoId))
-    : videoState.find((video) => video.id === selectedId) ?? videoState[0];
+  const selected = videoState.find((video) => video.id === selectedId) ?? videoState[0];
 
   const discoveryQuery = useMemo(() => videoQueryParams(activeCategory, activeTemplate, filters, query).toString(), [activeCategory, activeTemplate, filters, query]);
 
@@ -343,36 +274,6 @@ export function PrototypeApp({ page = 'dashboard', videoId }: { page?: PageKind;
 
   if (loading) return <main className="shell appStateOnly"><section className="statePanel"><Activity size={18} /><h1>Shorts IQ 데이터를 불러오는 중입니다.</h1><p>GET /api/state 응답을 기다리고 있습니다.</p></section></main>;
   if (!appState) return <main className="shell appStateOnly"><section className="statePanel error"><AlertTriangle size={18} /><h1>API 상태를 불러오지 못했습니다.</h1><p>{apiError ?? 'AppState가 비어 있습니다.'}</p><button className="primary" onClick={loadState}><Activity size={14} /> 다시 불러오기</button></section></main>;
-  if (page === 'video-detail' && videoId && detailLoading) return (
-    <main className="shell">
-      <Sidebar pathname={pathname} videoCount={videoState.length} lastSyncedAt={appState.lastSyncedAt} />
-      <section className="workspace">
-        <Topbar query={query} setQuery={setQuery} advancedOpen={advancedOpen} setAdvancedOpen={setAdvancedOpen} onSync={runSync} syncing={pendingAction === 'sync'} actionMessage={actionMessage} apiError={apiError} />
-        <BackButton fallback="/rankings" label="랭킹으로 돌아가기" />
-        <section className="statePanel"><Activity size={18} /><h1>영상 상세 API를 확인하는 중입니다.</h1><p>GET /api/videos/{videoId} 응답을 기준으로 상세 화면을 구성합니다.</p></section>
-      </section>
-    </main>
-  );
-  if (page === 'video-detail' && videoId && detailError) return (
-    <main className="shell">
-      <Sidebar pathname={pathname} videoCount={videoState.length} lastSyncedAt={appState.lastSyncedAt} />
-      <section className="workspace">
-        <Topbar query={query} setQuery={setQuery} advancedOpen={advancedOpen} setAdvancedOpen={setAdvancedOpen} onSync={runSync} syncing={pendingAction === 'sync'} actionMessage={actionMessage} apiError={detailError} />
-        <BackButton fallback="/rankings" label="랭킹으로 돌아가기" />
-        <section className="statePanel error"><AlertTriangle size={18} /><h1>영상 상세 API를 불러오지 못했습니다.</h1><p>{detailError}</p><button className="primary" onClick={() => window.location.reload()}><Activity size={14} /> 다시 불러오기</button></section>
-      </section>
-    </main>
-  );
-  if (page === 'video-detail' && videoId && (detailMissingId || !selected)) return (
-    <main className="shell">
-      <Sidebar pathname={pathname} videoCount={videoState.length} lastSyncedAt={appState.lastSyncedAt} />
-      <section className="workspace">
-        <Topbar query={query} setQuery={setQuery} advancedOpen={advancedOpen} setAdvancedOpen={setAdvancedOpen} onSync={runSync} syncing={pendingAction === 'sync'} actionMessage={actionMessage} apiError={apiError} />
-        <BackButton fallback="/rankings" label="랭킹으로 돌아가기" />
-        <VideoNotFoundPage requestedId={detailMissingId ?? videoId} totalVideos={videoState.length} />
-      </section>
-    </main>
-  );
   if (!selected) return <main className="shell appStateOnly"><section className="statePanel error"><AlertTriangle size={18} /><h1>선택 가능한 영상이 없습니다.</h1><p>API state는 응답했지만 영상 목록이 비어 있습니다. Live sync 후 다시 확인하세요.</p><button className="primary" onClick={loadState}><Activity size={14} /> 다시 불러오기</button></section></main>;
 
   return (
@@ -380,7 +281,7 @@ export function PrototypeApp({ page = 'dashboard', videoId }: { page?: PageKind;
       <Sidebar pathname={pathname} videoCount={videoState.length} lastSyncedAt={appState.lastSyncedAt} />
       <section className="workspace">
         <Topbar query={query} setQuery={setQuery} advancedOpen={advancedOpen} setAdvancedOpen={setAdvancedOpen} onSync={runSync} syncing={pendingAction === 'sync'} actionMessage={actionMessage} apiError={apiError} />
-        {pathname !== '/' && page !== 'video-detail' && <BackButton fallback="/" label="이전 페이지" />}
+        {pathname !== '/' && <BackButton fallback="/" label="이전 페이지" />}
         {advancedOpen && <DiscoveryPanel activeCategory={activeCategory} activeTemplate={activeTemplate} applyPreset={applyPreset} setActiveCategory={setActiveCategory} setActiveTemplate={setActiveTemplate} />}
         {page === 'dashboard' && <DashboardPage selected={selected} peers={videoState} filteredVideos={filteredVideos} activeCategory={activeCategory} activeTemplate={activeTemplate} activeFilter={activeFilter} serverQueryUrl={serverQueryUrl} discoveryLoading={discoveryLoading} discoveryError={discoveryError} filters={filters} setFilters={setFilters} savedCount={savedCount} downloads={downloads} templates={templates} totalVideos={videoState.length} folderStats={folderStats} resetDiscovery={resetDiscovery} setActiveTemplate={setActiveTemplate} setSelectedId={setSelectedId} toggleSaved={toggleSaved} setFolderModal={setFolderModal} setDownloadModal={setDownloadModal} clipStart={clipStart} clipEnd={clipEnd} setClipStart={setClipStart} setClipEnd={setClipEnd} assignFolder={assignFolder} pendingAction={pendingAction} onIngest={ingestReference} ingesting={pendingAction === 'ingest'} onYoutubeImport={importYoutubeKeyword} youtubeImporting={pendingAction === 'youtube'} />}
         {page === 'rankings' && <RankingsPage videos={filteredVideos} activeCategory={activeCategory} activeTemplate={activeTemplate} activeFilter={activeFilter} serverQueryUrl={serverQueryUrl} discoveryLoading={discoveryLoading} discoveryError={discoveryError} filters={filters} setFilters={setFilters} setSelectedId={setSelectedId} toggleSaved={toggleSaved} setDownloadModal={setDownloadModal} setFolderModal={setFolderModal} pendingAction={pendingAction} />}
@@ -388,7 +289,6 @@ export function PrototypeApp({ page = 'dashboard', videoId }: { page?: PageKind;
         {page === 'folders' && <FoldersPage folderStats={folderStats} videos={videoState} downloads={downloads} setSelectedId={setSelectedId} toggleSaved={toggleSaved} setDownloadModal={setDownloadModal} setFolderModal={setFolderModal} />}
         {page === 'match' && <MatchGuardPage selected={selected} report={matchReports[0]} onCreateReport={createMatchReport} creating={pendingAction === 'match'} />}
         {page === 'downloads' && <DownloadsPage downloads={downloads} videos={videoState} selected={selected} folderStats={folderStats} clipStart={clipStart} clipEnd={clipEnd} setClipStart={setClipStart} setClipEnd={setClipEnd} setSelectedId={setSelectedId} setDownloadModal={setDownloadModal} assignFolder={assignFolder} updateDownload={updateDownload} processDownload={processDownload} processing={pendingAction === 'download'} />}
-        {page === 'video-detail' && <VideoDetailPage selected={selected} peers={videoState} detailApiUrl={`/api/videos/${encodeURIComponent(selected.id)}`} related={videoState.filter((v) => v.id !== selected.id).slice(0, 4)} setSelectedId={setSelectedId} setDownloadModal={setDownloadModal} setFolderModal={setFolderModal} toggleSaved={toggleSaved} />}
       </section>
       {folderModal && <FolderModal selected={selected} folders={folders} onClose={() => setFolderModal(false)} onAssign={assignFolder} />}
       {downloadModal && <DownloadModal selected={selected} clipStart={clipStart} clipEnd={clipEnd} setClipStart={setClipStart} setClipEnd={setClipEnd} onClose={() => setDownloadModal(false)} onAdd={addDownload} />}
@@ -483,7 +383,7 @@ function FilterRail({ filters, setFilters }: { filters: DiscoveryFilters; setFil
   </section>;
 }
 function RankingPanel({ filteredVideos, activeCategory = '전체', activeTemplate = '전체', activeFilter = '전체 실시간 인기', serverQueryUrl, discoveryLoading, discoveryError, setSelectedId, toggleSaved, setDownloadModal, setFolderModal }: any) { return <div className="rankPanel"><div className="panelHead"><div><span className="miniLabel">GLOBAL LIVE RANKING</span><h2>전체 실시간 인기 영상</h2><p className="panelSub">현재 조건: {activeCategory} · {activeTemplate} · {activeFilter}</p><p className={`serverQuery ${discoveryError ? 'error' : ''}`}>{discoveryError ? `API fallback: ${discoveryError}` : `${discoveryLoading ? 'syncing' : 'server'} ${serverQueryUrl}`}</p></div><div className="panelActions"><button className="ghost small">Reset</button><button className="ghost small">Export CSV</button></div></div><div className="tableHeader"><span>Rank</span><span>Video</span><span>Template</span><span>Views</span><span>Velocity</span><span>Action</span></div><VideoRows videos={filteredVideos} setSelectedId={setSelectedId} toggleSaved={toggleSaved} setDownloadModal={setDownloadModal} setFolderModal={setFolderModal} /></div>; }
-function VideoRows({ videos: rows, setSelectedId, toggleSaved, setDownloadModal, setFolderModal }: { videos: VideoItem[]; setSelectedId: (id: string) => void; toggleSaved: (id: string) => void; setDownloadModal: (v: boolean) => void; setFolderModal: (v: boolean) => void }) { return <div className="videoRows">{rows.map((video) => <article className="videoRow" key={video.id} onClick={() => setSelectedId(video.id)}><div className="rank"><b>{video.rank}</b><em>▲ {Math.max(2, 14 - video.rank)}</em></div><Link className="videoInfo" href={`/videos/${video.id}`}><VideoThumb video={video} /><div><h3>{video.title}</h3><p>{video.channel} · {video.uploaded} · {video.category}</p></div></Link><span className="pill">{video.template}</span><strong className="mono">{video.views}</strong>{(() => { const mv = measuredVelocity(video); return <span className="velocity">+{formatCompact(mv.perHour)}/h{!mv.measured && <em className="miniLabel"> 추정</em>}</span>; })()}<div className="rowActions"><button aria-label="북마크" className={video.saved ? 'icon saved' : 'icon'} onClick={(event) => { event.stopPropagation(); toggleSaved(video.id); }}><Star size={13} /></button><button aria-label="구간 다운로드" className="icon" onClick={(event) => { event.stopPropagation(); setSelectedId(video.id); setDownloadModal(true); }}><Download size={13} /></button><button aria-label="폴더 선택" className="icon" onClick={(event) => { event.stopPropagation(); setSelectedId(video.id); setFolderModal(true); }}><MoreHorizontal size={13} /></button></div></article>)}{rows.length === 0 && <div className="emptyState">조건이 너무 좁습니다. 전체 랭킹 보기로 되돌려보세요.</div>}</div>; }
+function VideoRows({ videos: rows, setSelectedId, toggleSaved, setDownloadModal, setFolderModal }: { videos: VideoItem[]; setSelectedId: (id: string) => void; toggleSaved: (id: string) => void; setDownloadModal: (v: boolean) => void; setFolderModal: (v: boolean) => void }) { return <div className="videoRows">{rows.map((video) => <article className="videoRow" key={video.id} onClick={() => setSelectedId(video.id)}><div className="rank"><b>{video.rank}</b><em>▲ {Math.max(2, 14 - video.rank)}</em></div><div className="videoInfo"><VideoThumb video={video} /><div><h3>{video.title}</h3><p>{video.channel} · {video.uploaded} · {video.category}</p></div></div><span className="pill">{video.template}</span><strong className="mono">{video.views}</strong>{(() => { const mv = measuredVelocity(video); return <span className="velocity">+{formatCompact(mv.perHour)}/h{!mv.measured && <em className="miniLabel"> 추정</em>}</span>; })()}<div className="rowActions"><button aria-label="북마크" className={video.saved ? 'icon saved' : 'icon'} onClick={(event) => { event.stopPropagation(); toggleSaved(video.id); }}><Star size={13} /></button><button aria-label="구간 다운로드" className="icon" onClick={(event) => { event.stopPropagation(); setSelectedId(video.id); setDownloadModal(true); }}><Download size={13} /></button><button aria-label="폴더 선택" className="icon" onClick={(event) => { event.stopPropagation(); setSelectedId(video.id); setFolderModal(true); }}><MoreHorizontal size={13} /></button></div></article>)}{rows.length === 0 && <div className="emptyState">조건이 너무 좁습니다. 전체 랭킹 보기로 되돌려보세요.</div>}</div>; }
 function ScorecardCurve({ selected }: { selected: VideoItem }) {
   const [window, setWindow] = useState<ScoreWindow>('All');
   const curve = scorecardCurve(selected, window);
@@ -524,7 +424,7 @@ function RankingsPage(props: any) {
     </section>
     {tab === 'videos'
       ? <><FilterRail filters={props.filters} setFilters={props.setFilters} /><section className="widePanel"><RankingPanel filteredVideos={props.videos} {...props} /></section></>
-      : <ChannelsTab />}
+      : <ChannelsTab onPickVideo={(id) => { props.setSelectedId(id); setTab('videos'); }} />}
   </>;
 }
 const channelSortOptions = [
@@ -532,7 +432,7 @@ const channelSortOptions = [
   { key: '급성장순', label: '급성장' },
   { key: '구독자순', label: '구독자순' },
 ] as const;
-function ChannelsTab() {
+function ChannelsTab({ onPickVideo }: { onPickVideo: (id: string) => void }) {
   const [sort, setSort] = useState<typeof channelSortOptions[number]['key']>('조회수합계순');
   const [channels, setChannels] = useState<ChannelSummary[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -560,7 +460,7 @@ function ChannelsTab() {
       {(channels ?? []).map((channel, index) => <article className="videoRow channelRow" key={channel.channelId ?? channel.channel}>
         <div className="rank"><b>{index + 1}</b></div>
         {channel.topVideoId
-          ? <Link className="videoInfo" href={`/videos/${channel.topVideoId}`}><ChannelThumb channel={channel} /><div><h3>{channel.channel}</h3><p>{channel.videoCount} videos · {channel.topCategory} · 대표 {channel.topVideoTitle ?? '—'}</p></div></Link>
+          ? <button type="button" className="videoInfo videoInfoButton" onClick={() => onPickVideo(channel.topVideoId!)}><ChannelThumb channel={channel} /><div><h3>{channel.channel}</h3><p>{channel.videoCount} videos · {channel.topCategory} · 대표 {channel.topVideoTitle ?? '—'}</p></div></button>
           : <div className="videoInfo"><ChannelThumb channel={channel} /><div><h3>{channel.channel}</h3><p>{channel.videoCount} videos · {channel.topCategory}</p></div></div>}
         <strong className="mono">{channel.subscriberCount == null ? '—' : formatCompact(channel.subscriberCount)}</strong>
         <strong className="mono">{formatCompact(channel.totalViews)}</strong>
@@ -589,13 +489,17 @@ const youtubeIdFromUrl = (sourceUrl?: string) => {
 };
 const previewLabel = (video: VideoItem) => video.sourceKind === 'youtube-api' ? 'YouTube API' : video.sourceKind === 'youtube-oembed' ? 'oEmbed' : video.sourceKind === 'manual' ? 'Manual' : 'Seed';
 function VideoThumb({ video }: { video: VideoItem }) {
-  return <div className={`thumb ${video.thumbnailUrl ? 'hasImage' : ''}`} style={{ background: video.gradient }} aria-label={`${video.title} thumbnail`}>{video.thumbnailUrl ? <img src={video.thumbnailUrl} alt="" loading="lazy" referrerPolicy="no-referrer" /> : <Play size={16} />}<span>{previewLabel(video)}</span></div>;
+  const [hover, setHover] = useState(false);
+  const youtubeId = youtubeIdFromUrl(video.sourceUrl);
+  return <div className={`thumb ${video.thumbnailUrl ? 'hasImage' : ''}`} style={{ background: video.gradient }} aria-label={`${video.title} thumbnail`} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>{video.thumbnailUrl ? <img src={video.thumbnailUrl} alt="" loading="lazy" referrerPolicy="no-referrer" /> : <Play size={16} />}{hover && youtubeId && <iframe className="thumbPreview" title={`${video.title} preview`} src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${youtubeId}&playsinline=1`} frameBorder={0} allow="autoplay" />}<span>{previewLabel(video)}</span></div>;
 }
 function VideoPreview({ video, size = 'compact' }: { video: VideoItem; size?: 'compact' | 'large' }) {
+  const [hover, setHover] = useState(false);
   const youtubeId = youtubeIdFromUrl(video.sourceUrl);
   const href = youtubeId ? `https://www.youtube.com/shorts/${youtubeId}` : video.sourceUrl;
-  const body = <><div className={`videoPreviewMedia ${video.thumbnailUrl ? 'hasImage' : ''}`} style={{ background: video.gradient }}>{video.thumbnailUrl ? <img src={video.thumbnailUrl} alt="" loading="lazy" referrerPolicy="no-referrer" /> : <Play size={size === 'large' ? 34 : 22} />}<div className="previewScrim" /><div className="previewPlay"><Play size={size === 'large' ? 18 : 14} /></div><div className="previewMeta"><span>{previewLabel(video)}</span><b>{video.duration}</b></div></div></>;
-  return href ? <a className={`videoPreviewFrame ${size}`} href={href} target="_blank" rel="noreferrer" aria-label={`${video.title} preview`}>{body}</a> : <div className={`videoPreviewFrame ${size}`}>{body}</div>;
+  const body = <div className={`videoPreviewMedia ${video.thumbnailUrl ? 'hasImage' : ''}`} style={{ background: video.gradient }}>{video.thumbnailUrl ? <img src={video.thumbnailUrl} alt="" loading="lazy" referrerPolicy="no-referrer" /> : <Play size={size === 'large' ? 34 : 22} />}{hover && youtubeId && <iframe className="previewVideo" title={`${video.title} preview`} src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${youtubeId}&playsinline=1`} frameBorder={0} allow="autoplay" />}<div className="previewScrim" /><div className="previewPlay"><Play size={size === 'large' ? 18 : 14} /></div><div className="previewMeta"><span>{previewLabel(video)}</span><b>{video.duration}</b></div></div>;
+  const handlers = { onMouseEnter: () => setHover(true), onMouseLeave: () => setHover(false) };
+  return href ? <a className={`videoPreviewFrame ${size}`} href={href} target="_blank" rel="noreferrer" aria-label={`${video.title} preview`} {...handlers}>{body}</a> : <div className={`videoPreviewFrame ${size}`} {...handlers}>{body}</div>;
 }
 function SavedPage(props: any) { return <><Hero eyebrow="SAVED LIBRARY" title="저장한 영상과 템플릿을 작업 보드처럼 관리합니다." desc="Raindrop처럼 저장하되, 숏츠 제작 관점의 폴더·태그·다운로드 후보로 이어집니다." stats={[[String(props.videos.length), 'saved now'], ['4', 'folders']]} /><section className="widePanel"><RankingPanel filteredVideos={props.videos} activeCategory="저장됨" activeTemplate="전체" activeFilter="Saved" {...props} /></section></>; }
 function FoldersPage({ folderStats, videos: rows, downloads, setSelectedId, toggleSaved, setDownloadModal, setFolderModal }: { folderStats: FolderItem[]; videos: VideoItem[]; downloads: DownloadClip[]; setSelectedId: (id: string) => void; toggleSaved: (id: string) => void; setDownloadModal: (v: boolean) => void; setFolderModal: (v: boolean) => void }) {
@@ -674,22 +578,6 @@ function DownloadsPage({ downloads, videos, selected, folderStats, clipStart, cl
   const avgClip = downloads.length ? Math.round(downloads.reduce((sum, clip) => sum + Math.max(0, clip.endSec - clip.startSec), 0) / downloads.length) : 0;
   const videoById = new Map(videos.map((video) => [video.id, video]));
   return <><Hero eyebrow="DOWNLOAD QUEUE" title="필요한 구간만 잘라서 다운로드 큐로 넘깁니다." desc="영상 전체가 아니라 훅, 전환, CTA 구간을 선택해 레퍼런스 클립으로 저장하는 흐름입니다." stats={[[String(downloads.length), 'clips'], [`${avgClip}s`, 'avg clip']]} /><section className="downloadQueueGrid"><div className="queueList">{downloads.map((clip, i) => { const video = videoById.get(clip.videoId); return <article className={`queueItem ${clip.status}`} key={clip.id}><button className="queueMain" onClick={() => setSelectedId(clip.videoId)}><span>#{i + 1}</span>{video && <VideoThumb video={video} />}<h3>{clip.title}</h3><p>00:{String(clip.startSec).padStart(2, '0')}-00:{String(clip.endSec).padStart(2, '0')} · {clip.format.toUpperCase()} · {clip.aspectRatio} · {clip.status}</p><em>{clip.error ?? clip.outputPath ?? clip.policyNote}</em></button><div className="queueActions"><button className="ghost small nowrap" onClick={() => { setSelectedId(clip.videoId); setDownloadModal(true); }}>구간 조정</button><button className={`ghost small nowrap processAction ${clip.status === 'ready' ? 'activeStatus' : clip.status === 'failed' ? 'warning' : ''}`} aria-pressed={clip.status === 'ready'} disabled={processing || clip.status === 'processing' || clip.status === 'ready'} onClick={() => processDownload(clip.id)}>{clip.status === 'processing' ? 'Processing' : clip.status === 'failed' ? 'Retry' : clip.status === 'ready' ? 'Ready' : 'Process'}</button></div></article>; })}{downloads.length === 0 && <div className="emptyState">다운로드 큐가 비어 있습니다. 영상에서 구간 다운로드를 추가하세요.</div>}</div><DetailPanel selected={selected} folderStats={folderStats} clipStart={clipStart} clipEnd={clipEnd} setClipStart={setClipStart} setClipEnd={setClipEnd} setDownloadModal={setDownloadModal} assignFolder={assignFolder} /></section></>;
-}
-function VideoNotFoundPage({ requestedId, totalVideos }: { requestedId: string; totalVideos: number }) {
-  return <section className="notFoundPanel">
-    <div className="notFoundPhone"><div><AlertTriangle size={28} /></div></div>
-    <div className="notFoundCopy">
-      <span className="miniLabel">VIDEO DETAIL · NOT FOUND</span>
-      <h1>이 숏츠는 현재 인덱스에 없습니다.</h1>
-      <p><b>{requestedId}</b>는 GET /api/videos/{requestedId}에서 404로 응답했습니다. 저장된 {totalVideos.toLocaleString()}개 영상 중 다른 영상으로 자동 대체하지 않고, 수집 누락 또는 삭제된 레퍼런스로 표시합니다.</p>
-      <div className="detailActions"><Link className="primary" href="/rankings"><BarChart3 size={14} /> 랭킹에서 다시 선택</Link><Link className="ghost" href="/"><LayoutDashboard size={14} /> 대시보드로 이동</Link></div>
-    </div>
-  </section>;
-}
-function VideoDetailPage({ selected, peers = [], detailApiUrl, related, setSelectedId, setDownloadModal, setFolderModal, toggleSaved }: any) {
-  const metrics = vidiqMetrics(selected, computeBaseline(peers, selected));
-  const outlierLabel = metrics.measured.outlier === false ? '표본 부족' : `${metrics.outlier}x`;
-  return <><BackButton fallback="/rankings" label="랭킹으로 돌아가기" /><section className="videoDetailHero"><div className="detailPhone"><VideoPreview video={selected} size="large" /></div><div className="detailCopy"><span className="miniLabel">VIDEO DETAIL · vidIQ ANALYSIS</span><h1>{selected.title}</h1><p>{selected.channel} · {selected.category} · {selected.template} · {selected.uploaded}</p><p className="serverQuery">{detailApiUrl}</p><div className="detailActions"><button className="primary" onClick={() => setDownloadModal(true)}><Scissors size={14} /> 구간 다운로드</button><button className="ghost" onClick={() => setFolderModal(true)}><Folder size={14} /> 폴더 저장</button><button className="ghost" onClick={() => toggleSaved(selected.id)}><Star size={14} /> 북마크</button></div></div></section><section className="detailAnalytics vidiqAnalytics"><article><Eye size={16} /><span>Views</span><strong>{selected.views}</strong><em>{formatCompact(metrics.vph)} / hour</em></article><article><Activity size={16} /><span>vidIQ score</span><strong>{metrics.score}</strong><em>{metrics.grade} · {outlierLabel} outlier</em></article><article><ShieldCheck size={16} /><span>Retention</span><strong>{selected.retention}{selected.metricsProxy ? ' · 추정' : ''}</strong><em>{metrics.engagement} engagement · {metrics.measured.engagement ? '측정' : '추정'}</em></article><article><Bookmark size={16} /><span>Save / Share</span><strong>{selected.saveRate}{selected.metricsProxy ? ' · 추정' : ''}</strong><em>{formatCompact(metrics.shares)} share est.</em></article></section><section className="detailGrid vidiqDetailGrid"><VidiqInsightPanel selected={selected} peers={peers} compact /><article className="analysisCard"><h2>vidIQ 판단 로직</h2><p>{selected.hook}</p><ul><li>Views/hour: 업로드 후 경과 시간 대비 조회 속도</li><li>Outlier score: 동일 랭크 기대 조회수 대비 초과 배수</li><li>Engagement: 유지율·저장률·댓글/공유 추정 신호 합산</li><li>Action: 점수가 높을수록 템플릿 저장·구간 다운로드 우선</li></ul></article></section><section className="detailGrid"><article className="analysisCard"><h2>Hook breakdown</h2><p>{selected.hook}</p><ul><li>0–3s: 문제/결과를 먼저 보여주는 훅</li><li>4–18s: 템플릿 구조 반복으로 이해 비용 축소</li><li>19–31s: 저장/공유 포인트와 CTA</li></ul></article><article className="analysisCard"><h2>Reuse plan</h2><p>같은 템플릿을 다른 카테고리에 적용할 때의 제작 체크리스트입니다.</p><ul><li>첫 프레임에 결과물 또는 숫자를 노출</li><li>자막은 2줄 이하, 키워드만 하이라이트</li><li>전환 구간은 8–12초 사이에 배치</li></ul></article></section><section className="relatedBlock"><div className="panelHead"><div><span className="miniLabel">RELATED VIDEOS</span><h2>비슷한 패턴의 영상</h2></div></div><VideoRows videos={related} setSelectedId={setSelectedId} toggleSaved={toggleSaved} setDownloadModal={setDownloadModal} setFolderModal={setFolderModal} /></section></>;
 }
 // 모달 접근성: 마운트 시 첫 focusable로 focus 이동, Tab/Shift+Tab을 ref 내부에서 순환,
 // Escape로 닫기, 언마운트 시 직전 활성 요소로 focus 복원.

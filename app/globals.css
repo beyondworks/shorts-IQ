@@ -136,7 +136,12 @@ button:focus-visible, input:focus-visible { outline: 2px solid rgba(113,112,255,
 
 .workspace { min-width: 0; padding: 18px; }
 .topbar {
+  position: sticky; top: 0; z-index: 20;
   height: 42px; display: grid; grid-template-columns: minmax(280px, 1fr) auto auto minmax(120px, auto); gap: 10px; align-items: center;
+  /* workspace 좌우/상단 패딩만큼 음수 마진 후 패딩으로 보정해 스크롤 콘텐츠가 모서리로 비치지 않게 한다. */
+  margin: -18px -18px 0; padding: 18px 18px 12px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border-soft);
 }
 .searchBox {
   height: 42px; display: flex; align-items: center; gap: 10px; padding: 0 12px;
@@ -244,6 +249,10 @@ h1 {
 .ingestRailGrid .ingestBox { margin-top: 0; }
 
 .filterRail {
+  position: sticky;
+  /* topbar(height 42 + padding-bottom 12) 바로 아래에 붙는다. */
+  top: 54px;
+  z-index: 15;
   margin-top: 14px;
   padding: 9px;
   display: flex;
@@ -252,7 +261,8 @@ h1 {
   align-items: center;
   border: 1px solid var(--border-soft);
   border-radius: 16px;
-  background: rgba(255,255,255,.018);
+  /* sticky 시 아래 콘텐츠가 비치지 않도록 불투명 배경(패널 톤). */
+  background: var(--panel);
 }
 .filterRail::before {
   content: "FILTER / SORT";
@@ -386,10 +396,12 @@ h1 {
 .rank b { display: block; font-size: 15px; font-weight: 590; }
 .rank em { color: var(--green); font-size: 11px; font-style: normal; }
 .videoInfo { display: flex; align-items: center; gap: 11px; min-width: 0; }
-.videoInfo > div { min-width: 0; flex: 1; overflow: hidden; }
+.videoInfoButton { padding: 0; border: 0; background: transparent; color: inherit; text-align: left; }
+.videoInfo > div:not(.thumb) { min-width: 0; flex: 1; overflow: hidden; }
 .videoInfo:hover h3 { color: var(--text); }
-.thumb { position: relative; width: 38px; height: 58px; flex: 0 0 auto; border-radius: 9px; border: 1px solid rgba(255,255,255,.12); display: grid; place-items: center; color: white; overflow: hidden; box-shadow: inset 0 1px 0 rgba(255,255,255,.14); }
+.thumb { position: relative; width: 54px; height: 96px; aspect-ratio: 9 / 16; flex: 0 0 auto; border-radius: 9px; border: 1px solid rgba(255,255,255,.12); display: grid; place-items: center; color: white; overflow: hidden; box-shadow: inset 0 1px 0 rgba(255,255,255,.14); }
 .thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.thumb .thumbPreview { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; z-index: 2; pointer-events: none; object-fit: cover; }
 .thumb::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,.48)); }
 .thumb span { position: absolute; left: 4px; right: 4px; bottom: 3px; z-index: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: rgba(255,255,255,.84); font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 7px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; text-shadow: 0 1px 8px rgba(0,0,0,.74); }
 .thumb svg { position: relative; z-index: 1; filter: drop-shadow(0 2px 10px rgba(0,0,0,.44)); }
@@ -403,7 +415,16 @@ h1 {
 .icon.saved { color: var(--warning); border-color: rgba(245,158,11,.24); background: rgba(245,158,11,.08); }
 .emptyState { padding: 28px; color: var(--muted); font-size: 13px; text-align: center; }
 
-.detailPanel { position: sticky; top: 18px; padding: 14px; display: grid; gap: 12px; }
+.detailPanel {
+  position: sticky;
+  /* sticky topbar(54) + filterRail(약 60) 아래에 고정. scorecard~폴더까지 패널 안에서 스크롤된다. */
+  top: 116px;
+  max-height: calc(100vh - 132px);
+  overflow-y: auto;
+  padding: 14px;
+  display: grid;
+  gap: 12px;
+}
 .selectedPreview { display: grid; grid-template-columns: 98px minmax(0,1fr); gap: 14px; align-items: end; padding-bottom: 12px; border-bottom: 1px solid var(--border-soft); }
 .selectedPreview p { margin: 8px 0 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
 .phoneFrame { width: 92px; height: 156px; padding: 6px; border-radius: 18px; background: #050506; border: 1px solid var(--border); box-shadow: 0 20px 55px rgba(0,0,0,.34); }
@@ -413,6 +434,7 @@ h1 {
 .videoPreviewFrame.large { border-radius: 26px; }
 .videoPreviewMedia { position: relative; height: 100%; display: grid; place-items: center; overflow: hidden; background: linear-gradient(160deg,#7170ff,#111827 55%,#050505); }
 .videoPreviewMedia img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scale(1.015); }
+.previewVideo { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; z-index: 1; pointer-events: none; }
 .previewScrim { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.04), rgba(0,0,0,.26) 45%, rgba(0,0,0,.70)); }
 .previewPlay { position: relative; z-index: 2; width: 32px; height: 32px; display: grid; place-items: center; border-radius: 999px; color: white; background: rgba(0,0,0,.36); border: 1px solid rgba(255,255,255,.22); box-shadow: 0 12px 36px rgba(0,0,0,.38); backdrop-filter: blur(8px); }
 .videoPreviewFrame.large .previewPlay { width: 42px; height: 42px; }
@@ -648,7 +670,7 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
 .queueItem.failed { border-color: rgba(245,158,11,.3); }
 .queueMain { grid-column: 1 / 3; display: grid; grid-template-columns: 42px 42px minmax(0, 1fr); gap: 10px; align-items: center; width: 100%; min-width: 0; overflow: hidden; padding: 0; border: 0; background: transparent; color: inherit; text-align: left; }
 .queueMain > span { grid-row: 1 / span 3; align-self: center; }
-.queueMain .thumb { grid-column: 2; grid-row: 1 / span 3; width: 42px; height: 62px; }
+.queueMain .thumb { grid-column: 2; grid-row: 1 / span 3; width: 42px; height: 74px; }
 .queueMain h3, .queueMain p, .queueMain em { grid-column: 3; }
 .queueMain:hover h3 { color: var(--text); }
 .queueItem .ghost.small { grid-column: 3; grid-row: 1 / span 2; min-width: 82px; height: 30px; padding-inline: 12px; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; }
@@ -834,7 +856,7 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
   .notFoundPhone { justify-self: start; width: 160px; height: 284px; }
   .folderGridLarge, .detailAnalytics, .signalGrid { grid-template-columns: repeat(2, minmax(0,1fr)); }
   .discoveryPanel { grid-template-columns: 1fr 1fr; }
-  .detailPanel { position: relative; top: 0; grid-template-columns: repeat(3, minmax(0,1fr)); }
+  .detailPanel { position: relative; top: 0; max-height: none; overflow: visible; grid-template-columns: repeat(3, minmax(0,1fr)); }
   .selectedPreview { grid-column: 1 / -1; }
 }
 @media (max-width: 860px) {
@@ -845,7 +867,8 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
   .dashboardHeader h1, .dashboardHeader p { white-space: normal; overflow: visible; text-overflow: clip; }
   .dashboardHeader h1 { line-height: 1.18; }
   .dashboardHeader p { line-height: 1.55; }
-  .topbar { height: auto; }
+  .topbar { position: static; height: auto; margin: 0; padding: 0; background: transparent; border-bottom: 0; }
+  .filterRail { position: static; top: auto; }
   .topbar .ghost, .topbar .primary { justify-content: center; width: 100%; }
   .topbarStatus { text-align: center; }
   .advancedPanel, .downloadWorkspace, .discoveryPanel, .intentGrid { grid-template-columns: 1fr; }
