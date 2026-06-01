@@ -246,6 +246,25 @@ h1 {
 .kpi strong { display: block; margin-top: 8px; font-size: 24px; line-height: 1; font-weight: 510; letter-spacing: -.04em; }
 .kpi em { display: block; margin-top: 9px; color: var(--green); font-size: 11px; font-style: normal; }
 
+/* 슬림 KPI 스트립: 터진 지표 3개 + 신선도 배지. Hero를 대체하는 compact 라인. */
+.kpiStrip { margin-top: 16px; display: flex; flex-wrap: wrap; align-items: stretch; gap: 10px; }
+.kpiStrip .kpi { flex: 1 1 150px; min-width: 0; padding: 11px 14px; }
+.kpiStrip .kpi strong { margin-top: 6px; font-size: 21px; }
+.kpiStrip .kpi em { margin-top: 6px; }
+/* 신선도 배지: 자동 수집 상대시간. 정상=초록 pulse, stale=경고색. */
+.freshnessBadge { flex: 0 0 auto; align-self: center; margin-left: auto; display: inline-flex; align-items: center; gap: 7px; padding: 0 13px; height: 34px; border: 1px solid var(--border); border-radius: 999px; background: rgba(255,255,255,.025); color: var(--silver); font-size: 12px; font-weight: 510; }
+.freshnessBadge.stale { color: var(--warning); border-color: rgba(245,158,11,.34); background: rgba(245,158,11,.08); }
+
+/* 기간 탭 + 영상 가져오기 버튼 행. 랭킹 바로 위. */
+.periodRow { position: relative; margin-top: 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.periodTabs { margin-top: 0; }
+.periodRow > .ghost { flex: 0 0 auto; }
+/* 수집 서랍: 기간탭 행 아래로 슬라이드다운. 기존 ingestRail을 감싼다. */
+.ingestDrawer { position: absolute; top: calc(100% + 8px); left: 0; right: 0; z-index: 20; padding-top: 6px; animation: ingestDrawerIn .16s ease; }
+.ingestDrawer .ingestRail { margin-top: 0; box-shadow: 0 18px 48px rgba(0,0,0,.32); }
+.ingestDrawerClose { position: absolute; top: 14px; right: 14px; z-index: 2; }
+@keyframes ingestDrawerIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+
 .ingestRail { margin-top: 14px; padding: 14px; border: 1px solid var(--border); border-radius: 14px; background: rgba(255,255,255,.022); }
 .ingestRailHead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
 .ingestRailHead p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
@@ -927,4 +946,5 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
   .dashboardHeader p { font-size: 11px; }
   .filterRail { overflow-x: auto; flex-wrap: nowrap; }
   .filterSelect { flex: 0 0 auto; }
+  .ingestRailGrid { grid-template-columns: 1fr; }
 }
