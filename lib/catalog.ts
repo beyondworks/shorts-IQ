@@ -29,6 +29,25 @@ export const categoryOptions = [
 
 export const templateOptions = ['전체', 'Ranking Hook', '9:16 Full Frame', 'IG Caption Card', 'Before / After', 'Street Interview', 'POV Story', 'Listicle', 'Tutorial Steps', 'Duet/Reaction', 'Product Demo', 'News Explainer', 'Challenge Loop', 'Caption Meme'];
 
+// 대량 자동 수집용 시드 키워드 풀. 카테고리 생태계를 폭넓게 커버해 '한 키워드 편향'을 막는다.
+// discover 수집은 이 풀을 순회하며 키워드별 인기 Shorts를 모은 뒤 breakout 점수로 거른다.
+export const seedKeywords = [
+  '먹방', '레시피', '맛집', '브이로그', '일상', '게임', '롤', '마인크래프트',
+  '뷰티', '메이크업', '패션', '코디', '강아지', '고양이', '운동', '다이어트', '홈트',
+  '연애', '썸', '정치', '시사', '주식', '코인', '부동산', '아이돌', '직캠', '컴백',
+  '예능', '레전드', '하이라이트', '웹툰', '애니', '챌린지', '커버곡', '여행', '캠핑',
+  '자동차', '리뷰', '꿀팁', '내돈내산', 'asmr', '축구', '손흥민', '야구', '공포', '괴담',
+  '동기부여', '자기계발', '키즈', '육아', '틱톡', '릴스', 'IT', 'AI',
+];
+
+// count개 키워드를 회전 오프셋으로 선택 (수집을 반복할 때마다 다른 묶음을 돌게 한다).
+export const selectSeedKeywords = (count: number, offset = 0): string[] => {
+  const total = seedKeywords.length;
+  const take = Math.max(1, Math.min(count, total));
+  const start = ((offset % total) + total) % total;
+  return Array.from({ length: take }, (_, index) => seedKeywords[(start + index) % total]);
+};
+
 // 제목·채널명 키워드로 콘텐츠 카테고리를 추론한다. 위에서부터 첫 매칭을 사용하므로
 // 더 구체적인 규칙을 앞에 둔다. 매칭이 없으면 가장 포괄적인 '잡학상식·정보'로 분류.
 const categoryRules: { category: string; pattern: RegExp }[] = [

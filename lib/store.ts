@@ -1,6 +1,6 @@
 import { mkdir, readFile, rename, writeFile } from 'fs/promises';
 import path from 'node:path';
-import { commentsScore, durationSeconds, formatCompact, measuredVelocity, pct, shareScore, uploadedHours, velocityNumber } from './metrics';
+import { attachBreakout, commentsScore, durationSeconds, formatCompact, measuredVelocity, pct, shareScore, uploadedHours, velocityNumber } from './metrics';
 import { createSeedState } from './seed';
 import type { AppState, ChannelSummary, DownloadClip, FolderCollection, FolderItem, MatchReport, PolicyCheck, TemplatePattern, VideoItem } from './types';
 
@@ -46,7 +46,7 @@ export const readState = async (): Promise<AppState> => {
 
 export const readVisibleState = async (): Promise<AppState> => {
   const state = await readState();
-  const videos = rankVisibleVideos(visibleVideos(state.videos));
+  const videos = attachBreakout(rankVisibleVideos(visibleVideos(state.videos)));
   return {
     ...state,
     videos,
@@ -96,7 +96,7 @@ export const listTemplates = async (): Promise<TemplatePattern[]> => {
 };
 
 export const listRankings = async (query: VideoQuery = {}): Promise<VideoItem[]> => {
-  return listVideos({ sort: '급상승순', ...query });
+  return listVideos({ sort: '터진순', ...query });
 };
 
 export const listDownloads = async (): Promise<DownloadClip[]> => {
@@ -162,7 +162,7 @@ export const ingestVideo = async (payload: IngestPayload): Promise<AppState> => 
   ensureTemplate(state, video.template);
   state.lastSyncedAt = now;
   await writeState(state);
-  return readState();
+  return readVisibleState();
 });
 
 export const upsertVideos = async (videos: VideoItem[]): Promise<AppState> => withMutation(async () => {
@@ -196,7 +196,7 @@ export const upsertVideos = async (videos: VideoItem[]): Promise<AppState> => wi
   ensureFolder(state, 'YouTube 수집');
   state.lastSyncedAt = now;
   await writeState(state);
-  return readState();
+  return readVisibleState();
 });
 
 export const updateVideoSaved = async (id: string): Promise<AppState> => withMutation(async () => {
@@ -312,28 +312,6 @@ export const createMatchReport = async (payload: MatchReportPayload = {}): Promi
   };
 
   state.matchReports = [report, ...state.matchReports].slice(0, 20);
-  return writeState(state);
-});
-
-export const simulateLiveSync = async (): Promise<AppState> => withMutation(async () => {
-  const state = await readState();
-  const syncedAt = new Date().toISOString();
-  state.videos = state.videos.map((video) => {
-    const currentVelocity = Math.max(1000, velocityNumber(video));
-    const rankBoost = Math.max(1, 12 - video.rank);
-    const delta = Math.round(currentVelocity * (0.18 + rankBoost / 100));
-    const viewCount = video.viewCount + delta;
-    const velocity = currentVelocity + rankBoost * 137;
-    return {
-      ...video,
-      views: formatCompact(viewCount),
-      viewCount,
-      velocity: `+${(velocity / 1000).toFixed(1)}K/h`,
-      lastSampledAt: syncedAt,
-      viewsHistory: [...(video.viewsHistory ?? []), { at: syncedAt, views: viewCount }].slice(-24),
-    };
-  });
-  state.lastSyncedAt = syncedAt;
   return writeState(state);
 });
 
@@ -577,10 +555,14 @@ const folderCollection = (folder: FolderItem, state: AppState): FolderCollection
 };
 
 const toChannelSummary = (videos: VideoItem[]): ChannelSummary => {
-  const top = [...videos].sort((a, b) => b.viewCount - a.viewCount)[0];
+  // 채널 대표 영상 = 가장 터진 영상 (조회수합계 큰 게 아니라 폭발한 영상이 채널의 시그니처).
+  const byBreakout = [...videos].sort((a, b) => (b.breakout?.score ?? 0) - (a.breakout?.score ?? 0) || b.viewCount - a.viewCount);
+  const top = byBreakout[0];
   const topByVelocity = [...videos].sort((a, b) => velocityNumber(b) - velocityNumber(a))[0];
   const totalViews = videos.reduce((sum, video) => sum + video.viewCount, 0);
   const subscriberCount = videos.find((video) => video.subscriberCount != null)?.subscriberCount;
+  const breakoutScore = videos.reduce((max, video) => Math.max(max, video.breakout?.score ?? 0), 0);
+  const breakoutCount = videos.filter((video) => video.breakout && (video.breakout.grade === 'Breakout' || video.breakout.grade === 'Surging')).length;
   return {
     channelId: top.channelId,
     channel: top.channel,
@@ -595,6 +577,8 @@ const toChannelSummary = (videos: VideoItem[]): ChannelSummary => {
     topVideoId: top.id,
     topVideoTitle: top.title,
     topCategory: top.category,
+    breakoutScore,
+    breakoutCount,
   };
 };
 
@@ -609,8 +593,12 @@ const sortChannels = (channels: ChannelSummary[], sort?: string): ChannelSummary
       return sorted.sort((a, b) => b.growthRatio - a.growthRatio);
     case 'views':
     case '조회수합계순':
-    default:
       return sorted.sort((a, b) => b.totalViews - a.totalViews);
+    // 기본값 = 터진순: 터진 영상을 가장 많이/강하게 보유한 채널이 위로.
+    case 'breakout':
+    case '터진순':
+    default:
+      return sorted.sort((a, b) => b.breakoutScore - a.breakoutScore || b.breakoutCount - a.breakoutCount || b.totalViews - a.totalViews);
   }
 };
 
@@ -624,7 +612,7 @@ const mergeViewsHistory = (existing: VideoItem | undefined, importedVideo: Video
 
 const filterVideos = (videos: VideoItem[], query: VideoQuery) => {
   const search = (query.q ?? query.query ?? '').trim().toLowerCase();
-  return rankVisibleVideos([...videos]
+  const matched = [...videos]
     .filter((video) => isAllValue(query.category) || video.category === query.category)
     .filter((video) => isAllValue(query.template) || video.template === query.template)
     .filter((video) => matchesUploaded(video, query.uploaded))
@@ -632,8 +620,9 @@ const filterVideos = (videos: VideoItem[], query: VideoQuery) => {
     .filter((video) => matchesDuration(video, query.duration))
     .filter((video) => matchesLanguage(video, query.language))
     .filter((video) => matchesSubscribers(video, query.maxSubscribers, query.minSubscribers))
-    .filter((video) => !search || `${video.title} ${video.channel} ${video.template} ${video.category}`.toLowerCase().includes(search))
-    .sort((a, b) => compareVideos(a, b, query.sort)));
+    .filter((video) => !search || `${video.title} ${video.channel} ${video.template} ${video.category}`.toLowerCase().includes(search));
+  // breakout 신호는 필터 후 남은 목록을 peer-group으로 계산해야 정확하다 (정렬·표시에 모두 사용).
+  return rankVisibleVideos(attachBreakout(matched).sort((a, b) => compareVideos(a, b, query.sort)));
 };
 
 const matchesLanguage = (video: VideoItem, language?: string) => {
@@ -673,6 +662,7 @@ const uploadedHoursFromLabel = (label?: string) => {
   if (!label) return null;
   if (label.includes('24h')) return 24;
   if (label.includes('3일')) return 72;
+  if (label === '7일') return 168;
   const number = Number(label.match(/(\d+)/)?.[1] ?? NaN);
   if (!Number.isFinite(number)) return null;
   if (label.includes('일')) return number * 24;
@@ -696,6 +686,8 @@ const matchesDuration = (video: VideoItem, duration?: string) => {
   return !Number.isFinite(number) || durationSeconds(video.duration) <= number;
 };
 
+const breakoutOf = (video: VideoItem) => video.breakout?.score ?? 0;
+
 const compareVideos = (a: VideoItem, b: VideoItem, sort?: string) => {
   switch (sort) {
     case 'views':
@@ -706,7 +698,8 @@ const compareVideos = (a: VideoItem, b: VideoItem, sort?: string) => {
       return pct(b.saveRate) - pct(a.saveRate);
     case 'latest':
     case '최신순':
-      return a.rank - b.rank;
+      // 신선도순: 업로드가 최근일수록 위로.
+      return uploadedHours(a.uploaded) - uploadedHours(b.uploaded);
     case 'comments':
     case '댓글수순':
       return commentsScore(b) - commentsScore(a);
@@ -716,10 +709,13 @@ const compareVideos = (a: VideoItem, b: VideoItem, sort?: string) => {
     case 'acceleration':
     case '급가속순':
       return measuredVelocity(b).perHour - measuredVelocity(a).perHour;
+    // 기본값 = 터진순. 절대 조회수가 아니라 '기대 대비 폭발도'로 정렬한다.
+    case 'breakout':
+    case '터진순':
     case 'velocity':
     case '급상승순':
     default:
-      return a.rank - b.rank;
+      return breakoutOf(b) - breakoutOf(a) || b.viewCount - a.viewCount;
   }
 };
 

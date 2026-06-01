@@ -1,4 +1,4 @@
-import type { VideoItem } from './types';
+import type { BreakoutSignal, VideoItem } from './types';
 
 export type ScoreWindow = '24 hours' | '1st 7 days' | '1st 28 days' | 'All';
 
@@ -25,13 +25,16 @@ export const shareScore = (video: VideoItem) => Math.round((video.likeCount ?? v
 
 export const velocityNumber = (video: VideoItem) => Number(video.velocity.replace('+', '').replace('K/h', '')) * 1000;
 
-export const formatCompact = (value: number) => value >= 1000000000
-  ? `${(value / 1000000000).toFixed(1)}B`
-  : value >= 1000000
-  ? `${(value / 1000000).toFixed(value >= 10000000 ? 0 : 1)}M`
-  : value >= 1000
-    ? `${Math.round(value / 1000)}K`
-    : String(value);
+// 한국식 숫자 포맷: 1억+→"N.N억", 1만~9999만→"N만"(10만+는 정수, 미만은 소수1자리), 1000~9999→콤마, 미만→그대로.
+export const formatCompact = (value: number) => {
+  if (value >= 100000000) return `${(value / 100000000).toFixed(1)}억`;
+  if (value >= 10000) {
+    const man = value / 10000;
+    return man >= 10 ? `${Math.round(man).toLocaleString('ko-KR')}만` : `${man.toFixed(1)}만`;
+  }
+  if (value >= 1000) return value.toLocaleString('ko-KR');
+  return String(Math.round(value));
+};
 
 // 실측 viewsHistory 샘플 차분으로 시간당 조회수 증가를 계산. 샘플 1개면 누적/연령 fallback.
 export const measuredVelocity = (video: VideoItem): { perHour: number; measured: boolean } => {
@@ -68,6 +71,62 @@ export const computeBaseline = (videos: VideoItem[], target: VideoItem): number 
   const mid = Math.floor(peerViews.length / 2);
   return peerViews.length % 2 ? peerViews[mid] : (peerViews[mid - 1] + peerViews[mid]) / 2;
 };
+
+// ---- '터진 영상(Breakout)' 신호 ----
+// 핵심 질문: "이 영상이 '원래 큰 채널/오래된 누적'이라서가 아니라, 지금 기대 대비 비정상적으로 터졌는가?"
+// 세 축을 결합한다 (중요도 가중):
+//   1) 구독자 대비 조회수 배율 — 작은 채널의 폭발을 잡는 가장 강한 신호 (pint '상승배율')
+//   2) peer-group(같은 카테고리·연령대) 중앙값 대비 outlier
+//   3) 신선도 가중 시간당 조회수 (오래된 누적 대형 영상의 점수를 눌러 '지금' 터진 걸 띄움)
+// 사용 가능한 축만 가중 결합하고(없으면 재정규화), 절대 억지 숫자를 만들지 않는다(정직성).
+const SUBSCRIBER_FLOOR = 2000; // 초소형/미상 채널 분모 하한 — 배율 폭주 방지
+
+const clamp01 = (value: number) => Math.max(0, Math.min(1, value));
+
+export const breakoutSignal = (video: VideoItem, peers: VideoItem[]): BreakoutSignal => {
+  const ageHours = Math.max(uploadedHours(video.uploaded), 0.5);
+  const freshVph = Math.round(video.viewCount / ageHours);
+
+  // 1) 구독자 대비 배율 — log10 스케일 (×3≈주목, ×30≈급상승, ×300+≈폭발). 10^2.5≈316배에서 만점.
+  const sub = video.subscriberCount;
+  const subscriberMultiple = sub != null && sub > 0 ? video.viewCount / Math.max(sub, SUBSCRIBER_FLOOR) : null;
+  const subScore = subscriberMultiple != null ? clamp01(Math.log10(Math.max(subscriberMultiple, 0.1)) / 2.5) : null;
+
+  // 2) peer 대비 outlier — log10 (×2≈주목, ×8≈급상승, ×30+≈폭발). 10^1.5≈31배에서 만점.
+  const baseline = computeBaseline(peers, video);
+  const outlier = baseline && baseline > 0 ? video.viewCount / baseline : null;
+  const outScore = outlier != null ? clamp01(Math.log10(Math.max(outlier, 0.1)) / 1.5) : null;
+
+  // 3) 신선 속도 — 시간당 조회수 log (10만 vph에서 만점) + 신선도 계수
+  const velScore = clamp01(Math.log10(Math.max(freshVph, 1)) / 5);
+  const freshness = ageHours < 24 ? 1 : ageHours < 168 ? 0.82 : ageHours < 720 ? 0.5 : 0.2;
+
+  const parts: { value: number; weight: number }[] = [];
+  if (subScore != null) parts.push({ value: subScore, weight: 0.45 });
+  if (outScore != null) parts.push({ value: outScore, weight: 0.3 });
+  parts.push({ value: velScore, weight: 0.25 });
+  const totalWeight = parts.reduce((sum, part) => sum + part.weight, 0);
+  const blended = parts.reduce((sum, part) => sum + part.value * part.weight, 0) / totalWeight;
+
+  // 신선도 영향을 강화: '지금 터진' 영상을 띄우고, 과거에 터진 누적 대형 영상은 누른다.
+  // (특정 기간만 보려면 기간 필터로 정밀 제어 — 기본 랭킹은 최근 쪽으로 기운다.)
+  const score = Math.round(clamp01(blended * (0.4 + 0.6 * freshness)) * 100);
+  const grade: BreakoutSignal['grade'] = score >= 75 ? 'Breakout' : score >= 55 ? 'Surging' : score >= 38 ? 'Notable' : 'Steady';
+
+  return {
+    score,
+    grade,
+    subscriberMultiple,
+    outlier,
+    freshVph,
+    ageHours,
+    measured: { subscriberMultiple: subScore != null, outlier: outScore != null },
+  };
+};
+
+// 전체 목록에 breakout 신호를 한 번 부여한다. peer baseline은 같은 목록 내에서 계산.
+export const attachBreakout = (videos: VideoItem[]): VideoItem[] =>
+  videos.map((video) => ({ ...video, breakout: breakoutSignal(video, videos) }));
 
 export const vidiqMetrics = (video: VideoItem, baseline?: number | null) => {
   const age = Math.max(uploadedHours(video.uploaded), .5);

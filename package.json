@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "pnpm build && SMOKE_SERVER_MODE=start node scripts/smoke-test.mjs",
     "test:browser": "pnpm build && BROWSER_QA_SERVER_MODE=start node scripts/browser-qa.mjs",
-    "test:full": "pnpm test && pnpm test:browser"
+    "test:full": "pnpm test && pnpm test:browser",
+    "collect": "node scripts/collector.mjs"
   },
   "dependencies": {
     "@next/font": "latest",

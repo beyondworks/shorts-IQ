@@ -1,3 +1,17 @@
+export type BreakoutGrade = 'Breakout' | 'Surging' | 'Notable' | 'Steady';
+
+// '터진 영상' 신호 — 절대 조회수가 아니라 "기대 대비 얼마나 비정상적으로 터졌는가".
+// 런타임 파생값(저장하지 않음). null = 해당 축의 표본/데이터 부족(정직하게 미측정 처리).
+export type BreakoutSignal = {
+  score: number; // 0~100
+  grade: BreakoutGrade;
+  subscriberMultiple: number | null; // 구독자 대비 조회수 배율
+  outlier: number | null; // peer-group 중앙값 대비 배율
+  freshVph: number; // 신선도 가중 시간당 조회수
+  ageHours: number;
+  measured: { subscriberMultiple: boolean; outlier: boolean };
+};
+
 export type VideoItem = {
   id: string;
   rank: number;
@@ -30,6 +44,8 @@ export type VideoItem = {
   channelId?: string;
   channelPublishedAt?: string;
   metricsProxy?: boolean;
+  breakout?: BreakoutSignal; // 런타임 파생 (랭킹/표시용)
+  rankDelta?: number | null; // 직전 샘플 대비 랭킹 변동 (양수=상승). null=신규/추적 부족
 };
 
 export type TemplatePattern = {
@@ -73,6 +89,8 @@ export type ChannelSummary = {
   topVideoId?: string;
   topVideoTitle?: string;
   topCategory: string;
+  breakoutScore: number; // 채널 최고 breakout 점수 (터진 영상 보유 정도)
+  breakoutCount: number; // breakout/surging 등급 영상 수
 };
 
 export type DownloadClip = {
