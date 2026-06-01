@@ -59,6 +59,22 @@ export type FolderCollection = FolderItem & {
   updatedAt: string | null;
 };
 
+export type ChannelSummary = {
+  channelId?: string;
+  channel: string;
+  subscriberCount?: number;
+  videoCount: number;
+  totalViews: number;
+  avgViews: number;
+  topVelocity: string;
+  growthRatio: number;
+  gradient: string;
+  thumbnailUrl?: string;
+  topVideoId?: string;
+  topVideoTitle?: string;
+  topCategory: string;
+};
+
 export type DownloadClip = {
   id: string;
   videoId: string;

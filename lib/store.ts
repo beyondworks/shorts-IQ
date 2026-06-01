@@ -2,7 +2,7 @@ import { mkdir, readFile, rename, writeFile } from 'fs/promises';
 import path from 'node:path';
 import { commentsScore, durationSeconds, formatCompact, measuredVelocity, pct, shareScore, uploadedHours, velocityNumber } from './metrics';
 import { createSeedState } from './seed';
-import type { AppState, DownloadClip, FolderCollection, FolderItem, MatchReport, PolicyCheck, TemplatePattern, VideoItem } from './types';
+import type { AppState, ChannelSummary, DownloadClip, FolderCollection, FolderItem, MatchReport, PolicyCheck, TemplatePattern, VideoItem } from './types';
 
 type MatchReportPayload = Partial<Pick<MatchReport, 'sourceTitle' | 'remakeTitle' | 'sourceUrl' | 'remakeUrl'>> & {
   remakeNotes?: string;
@@ -116,6 +116,18 @@ export const listFolderCollections = async (folderName?: string): Promise<Folder
 export const listMatchReports = async (): Promise<MatchReport[]> => {
   const state = await readState();
   return state.matchReports;
+};
+
+export const listChannels = async (sort?: string): Promise<ChannelSummary[]> => {
+  const state = await readVisibleState();
+  const groups = new Map<string, VideoItem[]>();
+  for (const video of state.videos) {
+    const key = video.channelId || video.channel;
+    const list = groups.get(key) ?? [];
+    list.push(video);
+    groups.set(key, list);
+  }
+  return sortChannels(Array.from(groups.values()).map(toChannelSummary), sort);
 };
 
 export const ingestVideo = async (payload: IngestPayload): Promise<AppState> => withMutation(async () => {
@@ -562,6 +574,44 @@ const folderCollection = (folder: FolderItem, state: AppState): FolderCollection
     topVelocity: topVideo?.velocity ?? '+0.0K/h',
     updatedAt,
   };
+};
+
+const toChannelSummary = (videos: VideoItem[]): ChannelSummary => {
+  const top = [...videos].sort((a, b) => b.viewCount - a.viewCount)[0];
+  const topByVelocity = [...videos].sort((a, b) => velocityNumber(b) - velocityNumber(a))[0];
+  const totalViews = videos.reduce((sum, video) => sum + video.viewCount, 0);
+  const subscriberCount = videos.find((video) => video.subscriberCount != null)?.subscriberCount;
+  return {
+    channelId: top.channelId,
+    channel: top.channel,
+    subscriberCount,
+    videoCount: videos.length,
+    totalViews,
+    avgViews: Math.round(totalViews / videos.length),
+    topVelocity: topByVelocity?.velocity ?? '+0.0K/h',
+    growthRatio: subscriberCount && subscriberCount > 0 ? totalViews / subscriberCount : 0,
+    gradient: top.gradient,
+    thumbnailUrl: top.thumbnailUrl,
+    topVideoId: top.id,
+    topVideoTitle: top.title,
+    topCategory: top.category,
+  };
+};
+
+const sortChannels = (channels: ChannelSummary[], sort?: string): ChannelSummary[] => {
+  const sorted = [...channels];
+  switch (sort) {
+    case 'subscribers':
+    case '구독자순':
+      return sorted.sort((a, b) => (b.subscriberCount ?? 0) - (a.subscriberCount ?? 0));
+    case 'growth':
+    case '급성장순':
+      return sorted.sort((a, b) => b.growthRatio - a.growthRatio);
+    case 'views':
+    case '조회수합계순':
+    default:
+      return sorted.sort((a, b) => b.totalViews - a.totalViews);
+  }
 };
 
 const mergeViewsHistory = (existing: VideoItem | undefined, importedVideo: VideoItem) => {

@@ -6,7 +6,7 @@ import net from "node:net";
 
 const STARTUP_TIMEOUT_MS = 45_000;
 const REQUEST_TIMEOUT_MS = 10_000;
-const HTML_ROUTES = ["/", "/rankings", "/search", "/saved", "/folders", "/downloads", "/match", "/videos/vid-001", "/videos/not-in-state"];
+const HTML_ROUTES = ["/", "/rankings", "/saved", "/folders", "/downloads", "/match", "/videos/vid-001", "/videos/not-in-state"];
 
 const checks = [];
 const externalBaseUrl = Boolean(process.env.SMOKE_BASE_URL);
@@ -117,6 +117,16 @@ async function runApiChecks(origin) {
   });
   await checkJson("GET /api/videos new category filter contract", `${origin}/api/videos?category=${encodeURIComponent("잡학상식·정보")}`, {
     validate: (body) => assertArray(body.videos ?? body, "videos response"),
+  });
+  await checkJson("GET /api/channels returns ranked channels", `${origin}/api/channels?sort=${encodeURIComponent("조회수합계순")}`, {
+    validate: (body) => {
+      assertArray(body.channels, "channels");
+      if (body.channels.length > 0) {
+        const channel = body.channels[0];
+        if (typeof channel.videoCount !== "number") throw new Error("expected channel videoCount");
+        if (typeof channel.totalViews !== "number") throw new Error("expected channel totalViews");
+      }
+    },
   });
   await checkJson("POST /api/youtube/search dry-run returns search plan", `${origin}/api/youtube/search`, {
     method: "POST",

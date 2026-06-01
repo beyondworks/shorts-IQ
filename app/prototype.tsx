@@ -14,12 +14,11 @@ import {
   scoreWindows, shareScore, uploadedHours, velocityNumber, vidiqMetrics,
   type ScoreWindow,
 } from '../lib/metrics';
-import type { AppState, DownloadClip, FolderItem, MatchReport, TemplatePattern, VideoItem } from '../lib/types';
+import type { AppState, ChannelSummary, DownloadClip, FolderItem, MatchReport, VideoItem } from '../lib/types';
 
 const navItems = [
   { label: 'Dashboard', href: '/', icon: LayoutDashboard },
   { label: 'Trend Rankings', href: '/rankings', icon: BarChart3 },
-  { label: 'Video Search', href: '/search', icon: Search },
   { label: 'Saved Library', href: '/saved', icon: Library },
   { label: 'Folders', href: '/folders', icon: Folder },
   { label: 'Download Queue', href: '/downloads', icon: Download },
@@ -47,7 +46,7 @@ const filterSummary = (filters: DiscoveryFilters) => Object.values(filters).join
 const uploadWindowHours = (window: DiscoveryFilters['uploaded']) => window === '실시간' ? 1 : window === '업로드 24h' ? 24 : window === '업로드 3일' ? 72 : window === '14일' ? 336 : window === '30일' ? 720 : window === '60일' ? 1440 : window === '90일' ? 2160 : window === '180일' ? 4320 : window === '1년 이상' ? Infinity : Infinity;
 // 채널규모 필터의 구독자 상한값. '전체 규모'면 null(제한 없음).
 const subscriberBound = (scale: DiscoveryFilters['subscribers']): number | null => scale === '소형 1만↓' ? 10000 : scale === '중형 10만↓' ? 100000 : scale === '대형 제외 100만↓' ? 1000000 : null;
-type PageKind = 'dashboard' | 'rankings' | 'search' | 'saved' | 'folders' | 'downloads' | 'match' | 'video-detail';
+type PageKind = 'dashboard' | 'rankings' | 'saved' | 'folders' | 'downloads' | 'match' | 'video-detail';
 type ActionName = 'sync' | 'save' | 'folder' | 'download' | 'match' | 'ingest' | 'youtube' | null;
 
 const videoQueryParams = (category: string, template: string, filters: DiscoveryFilters, query: string) => {
@@ -99,7 +98,7 @@ export function PrototypeApp({ page = 'dashboard', videoId }: { page?: PageKind;
   const [selectedId, setSelectedId] = useState(videoId ?? '');
   const [folderModal, setFolderModal] = useState(false);
   const [downloadModal, setDownloadModal] = useState(false);
-  const [advancedOpen, setAdvancedOpen] = useState(page === 'search');
+  const [advancedOpen, setAdvancedOpen] = useState(false);
   const [clipStart, setClipStart] = useState(3);
   const [clipEnd, setClipEnd] = useState(31);
   const [loading, setLoading] = useState(true);
@@ -297,7 +296,7 @@ export function PrototypeApp({ page = 'dashboard', videoId }: { page?: PageKind;
 
   useEffect(() => {
     if (!initialQueryApplied.current || typeof window === 'undefined') return;
-    const supportsDiscoveryQuery = pathname === '/' || pathname === '/rankings' || pathname === '/search';
+    const supportsDiscoveryQuery = pathname === '/' || pathname === '/rankings';
     if (!supportsDiscoveryQuery) return;
     window.history.replaceState(null, '', `${pathname}${discoveryQuery ? `?${discoveryQuery}` : ''}`);
   }, [discoveryQuery, pathname]);
@@ -383,9 +382,8 @@ export function PrototypeApp({ page = 'dashboard', videoId }: { page?: PageKind;
         <Topbar query={query} setQuery={setQuery} advancedOpen={advancedOpen} setAdvancedOpen={setAdvancedOpen} onSync={runSync} syncing={pendingAction === 'sync'} actionMessage={actionMessage} apiError={apiError} />
         {pathname !== '/' && page !== 'video-detail' && <BackButton fallback="/" label="이전 페이지" />}
         {advancedOpen && <DiscoveryPanel activeCategory={activeCategory} activeTemplate={activeTemplate} applyPreset={applyPreset} setActiveCategory={setActiveCategory} setActiveTemplate={setActiveTemplate} />}
-        {page === 'dashboard' && <DashboardPage selected={selected} peers={videoState} filteredVideos={filteredVideos} activeCategory={activeCategory} activeTemplate={activeTemplate} activeFilter={activeFilter} serverQueryUrl={serverQueryUrl} discoveryLoading={discoveryLoading} discoveryError={discoveryError} filters={filters} setFilters={setFilters} savedCount={savedCount} downloads={downloads} templates={templates} totalVideos={videoState.length} folderStats={folderStats} resetDiscovery={resetDiscovery} setActiveTemplate={setActiveTemplate} setSelectedId={setSelectedId} toggleSaved={toggleSaved} setFolderModal={setFolderModal} setDownloadModal={setDownloadModal} clipStart={clipStart} clipEnd={clipEnd} setClipStart={setClipStart} setClipEnd={setClipEnd} assignFolder={assignFolder} pendingAction={pendingAction} />}
+        {page === 'dashboard' && <DashboardPage selected={selected} peers={videoState} filteredVideos={filteredVideos} activeCategory={activeCategory} activeTemplate={activeTemplate} activeFilter={activeFilter} serverQueryUrl={serverQueryUrl} discoveryLoading={discoveryLoading} discoveryError={discoveryError} filters={filters} setFilters={setFilters} savedCount={savedCount} downloads={downloads} templates={templates} totalVideos={videoState.length} folderStats={folderStats} resetDiscovery={resetDiscovery} setActiveTemplate={setActiveTemplate} setSelectedId={setSelectedId} toggleSaved={toggleSaved} setFolderModal={setFolderModal} setDownloadModal={setDownloadModal} clipStart={clipStart} clipEnd={clipEnd} setClipStart={setClipStart} setClipEnd={setClipEnd} assignFolder={assignFolder} pendingAction={pendingAction} onIngest={ingestReference} ingesting={pendingAction === 'ingest'} onYoutubeImport={importYoutubeKeyword} youtubeImporting={pendingAction === 'youtube'} />}
         {page === 'rankings' && <RankingsPage videos={filteredVideos} activeCategory={activeCategory} activeTemplate={activeTemplate} activeFilter={activeFilter} serverQueryUrl={serverQueryUrl} discoveryLoading={discoveryLoading} discoveryError={discoveryError} filters={filters} setFilters={setFilters} setSelectedId={setSelectedId} toggleSaved={toggleSaved} setDownloadModal={setDownloadModal} setFolderModal={setFolderModal} pendingAction={pendingAction} />}
-        {page === 'search' && <SearchPage query={query} setQuery={setQuery} activeCategory={activeCategory} activeTemplate={activeTemplate} serverQueryUrl={serverQueryUrl} discoveryLoading={discoveryLoading} discoveryError={discoveryError} setActiveCategory={setActiveCategory} setActiveTemplate={setActiveTemplate} filteredVideos={filteredVideos} setSelectedId={setSelectedId} toggleSaved={toggleSaved} setDownloadModal={setDownloadModal} setFolderModal={setFolderModal} onIngest={ingestReference} ingesting={pendingAction === 'ingest'} onYoutubeImport={importYoutubeKeyword} youtubeImporting={pendingAction === 'youtube'} />}
         {page === 'saved' && <SavedPage videos={videoState.filter((v) => v.saved)} setSelectedId={setSelectedId} toggleSaved={toggleSaved} setDownloadModal={setDownloadModal} setFolderModal={setFolderModal} />}
         {page === 'folders' && <FoldersPage folderStats={folderStats} videos={videoState} downloads={downloads} setSelectedId={setSelectedId} toggleSaved={toggleSaved} setDownloadModal={setDownloadModal} setFolderModal={setFolderModal} />}
         {page === 'match' && <MatchGuardPage selected={selected} report={matchReports[0]} onCreateReport={createMatchReport} creating={pendingAction === 'match'} />}
@@ -426,7 +424,39 @@ function Hero({ eyebrow, title, desc, stats }: { eyebrow: string; title: string;
   return <div className="dashboardHeader"><div><div className="eyebrow"><span /> {eyebrow}</div><h1>{title}</h1><p>{desc}</p></div><div className="headerStats">{(stats ?? [['+31.4%', 'avg velocity'], ['4.2M', 'live views']]).map(([n, l]) => <div key={l}><b>{n}</b><span>{l}</span></div>)}</div></div>;
 }
 function DashboardPage(props: any) {
-  return <><Hero eyebrow="REAL-TIME SHORTS RADAR" title="전체 숏츠에서 지금 뜨는 영상과 템플릿을 먼저 보여줍니다." desc="카테고리 안에 갇힌 랭킹이 아니라, 전체 실시간 인기 영상 → 템플릿 신호 → 저장/다운로드 후보로 이어지는 리서치 흐름." /><section className="kpiGrid" aria-label="Realtime metrics"><article className="kpi"><span>수집 영상</span><strong>{props.totalVideos.toLocaleString()}</strong><em>from API state</em></article><article className="kpi"><span>감지 템플릿</span><strong>{props.templates.length}</strong><em>{templateOptions.length - 1} taxonomy types</em></article><article className="kpi"><span>북마크</span><strong>{props.savedCount}</strong><em>{props.folderStats.length} folders</em></article><article className="kpi"><span>다운로드 큐</span><strong>{props.downloads.length}</strong><em>{props.downloads.filter((clip: DownloadClip) => clip.status === 'ready').length} clips ready</em></article></section><FilterRail filters={props.filters} setFilters={props.setFilters} /><TemplateSignals templates={props.templates} setActiveTemplate={props.setActiveTemplate} resetDiscovery={props.resetDiscovery} /><section className="contentGrid"><RankingPanel {...props} /><DetailPanel {...props} /></section></>;
+  return <><Hero eyebrow="REAL-TIME SHORTS RADAR" title="전체 숏츠에서 지금 뜨는 영상과 템플릿을 먼저 보여줍니다." desc="카테고리 안에 갇힌 랭킹이 아니라, 전체 실시간 인기 영상 → 템플릿 신호 → 저장/다운로드 후보로 이어지는 리서치 흐름." /><section className="kpiGrid" aria-label="Realtime metrics"><article className="kpi"><span>수집 영상</span><strong>{props.totalVideos.toLocaleString()}</strong><em>from API state</em></article><article className="kpi"><span>감지 템플릿</span><strong>{props.templates.length}</strong><em>{templateOptions.length - 1} taxonomy types</em></article><article className="kpi"><span>북마크</span><strong>{props.savedCount}</strong><em>{props.folderStats.length} folders</em></article><article className="kpi"><span>다운로드 큐</span><strong>{props.downloads.length}</strong><em>{props.downloads.filter((clip: DownloadClip) => clip.status === 'ready').length} clips ready</em></article></section><DashboardIngest activeCategory={props.activeCategory} activeTemplate={props.activeTemplate} onIngest={props.onIngest} ingesting={props.ingesting} onYoutubeImport={props.onYoutubeImport} youtubeImporting={props.youtubeImporting} /><FilterRail filters={props.filters} setFilters={props.setFilters} /><section className="contentGrid"><RankingPanel {...props} /><DetailPanel {...props} /></section></>;
+}
+function DashboardIngest({ activeCategory, activeTemplate, onIngest, ingesting, onYoutubeImport, youtubeImporting }: { activeCategory: string; activeTemplate: string; onIngest: (payload: { category?: string; language?: string; sourceUrl?: string; template?: string; title?: string }) => Promise<boolean>; ingesting: boolean; onYoutubeImport: (payload: { category?: string; language?: string; query?: string; template?: string }) => Promise<boolean>; youtubeImporting: boolean }) {
+  const [sourceUrl, setSourceUrl] = useState('');
+  const [title, setTitle] = useState('');
+  const [youtubeQuery, setYoutubeQuery] = useState('');
+  const [language, setLanguage] = useState<VideoItem['language']>('한국어');
+  const submitIngest = async () => {
+    const saved = await onIngest({
+      sourceUrl: sourceUrl.trim() || undefined,
+      title: title.trim() || undefined,
+      category: activeCategory === '전체' ? '수동 수집' : activeCategory,
+      template: activeTemplate === '전체' ? '9:16 Full Frame' : activeTemplate,
+      language,
+    });
+    if (saved) { setSourceUrl(''); setTitle(''); }
+  };
+  const submitYoutubeImport = async () => {
+    const saved = await onYoutubeImport({
+      query: youtubeQuery.trim(),
+      category: activeCategory === '전체' ? 'YouTube 수집' : activeCategory,
+      template: activeTemplate === '전체' ? undefined : activeTemplate,
+      language,
+    });
+    if (saved) setYoutubeQuery('');
+  };
+  return <section className="ingestRail" aria-label="데이터 수집">
+    <div className="ingestRailHead"><span className="miniLabel">데이터 수집</span><p>키워드로 Shorts 후보를 모으거나 레퍼런스 URL을 직접 인덱스에 추가합니다.</p></div>
+    <div className="ingestRailGrid">
+      <div className="ingestBox"><span className="miniLabel">YOUTUBE DATA API</span><input aria-label="YouTube keyword" placeholder="키워드로 Shorts 후보 수집" value={youtubeQuery} onChange={(event) => setYoutubeQuery(event.target.value)} /><button className="primary wide" onClick={() => { void submitYoutubeImport(); }} disabled={youtubeImporting || !youtubeQuery.trim()}><Search size={14} /> {youtubeImporting ? 'API 수집 중' : '키워드 수집'}</button></div>
+      <div className="ingestBox"><span className="miniLabel">ADD REFERENCE</span><input aria-label="YouTube Shorts URL" placeholder="YouTube Shorts URL 또는 레퍼런스 URL" value={sourceUrl} onChange={(event) => setSourceUrl(event.target.value)} /><input aria-label="Manual title" placeholder="수동 제목 fallback" value={title} onChange={(event) => setTitle(event.target.value)} /><div className="segmentedMini">{(['한국어', '영어', '기타'] as const).map((item) => <button key={item} className={language === item ? 'activeChip' : ''} onClick={() => setLanguage(item)}>{item}</button>)}</div><button className="primary wide" onClick={() => { void submitIngest(); }} disabled={ingesting || (!sourceUrl.trim() && !title.trim())}><Search size={14} /> {ingesting ? '수집 중' : '레퍼런스 추가'}</button></div>
+    </div>
+  </section>;
 }
 function FilterRail({ filters, setFilters }: { filters: DiscoveryFilters; setFilters: (v: DiscoveryFilters) => void }) {
   const [openKey, setOpenKey] = useState<keyof DiscoveryFilters | null>(null);
@@ -452,7 +482,6 @@ function FilterRail({ filters, setFilters }: { filters: DiscoveryFilters; setFil
     <button className="ghost small" onClick={() => { setFilters(defaultFilters); setOpenKey(null); }}><SlidersHorizontal size={13} /> 초기화</button>
   </section>;
 }
-function TemplateSignals({ templates, setActiveTemplate, resetDiscovery }: { templates: TemplatePattern[]; setActiveTemplate: (v: string) => void; resetDiscovery?: () => void }) { return <><section className="templateSignalHeader"><div><span className="miniLabel">TEMPLATE SIGNALS</span><h2>왜 #1~#4 카드가 있나요?</h2><p>전체 실시간 인기 영상에서 반복적으로 발견되는 “템플릿 패턴” 순위입니다. 카드를 누르면 해당 포맷의 영상만 좁혀볼 수 있습니다.</p></div><button className="ghost small" onClick={resetDiscovery}>전체 랭킹 보기</button></section><section className="templateGrid">{templates.slice(0, 4).map((template, idx) => <button className={`templateCard ${template.tone}`} key={template.name} onClick={() => setActiveTemplate(template.name)}><div className="templateTop"><span>#{idx + 1} signal</span><Bookmark size={13} /></div><h3>{template.name}</h3><p>{template.type}</p><div className="metricLine"><strong>{template.views}</strong><em>{template.delta}</em></div><p className="templateWhy">{template.why}</p><div className="templateMeta"><span>{template.count} videos</span><span>전체 영상 기준</span></div></button>)}{templates.length === 0 && <div className="emptyState">템플릿 데이터가 아직 없습니다. Live sync 후 다시 확인하세요.</div>}</section></>; }
 function RankingPanel({ filteredVideos, activeCategory = '전체', activeTemplate = '전체', activeFilter = '전체 실시간 인기', serverQueryUrl, discoveryLoading, discoveryError, setSelectedId, toggleSaved, setDownloadModal, setFolderModal }: any) { return <div className="rankPanel"><div className="panelHead"><div><span className="miniLabel">GLOBAL LIVE RANKING</span><h2>전체 실시간 인기 영상</h2><p className="panelSub">현재 조건: {activeCategory} · {activeTemplate} · {activeFilter}</p><p className={`serverQuery ${discoveryError ? 'error' : ''}`}>{discoveryError ? `API fallback: ${discoveryError}` : `${discoveryLoading ? 'syncing' : 'server'} ${serverQueryUrl}`}</p></div><div className="panelActions"><button className="ghost small">Reset</button><button className="ghost small">Export CSV</button></div></div><div className="tableHeader"><span>Rank</span><span>Video</span><span>Template</span><span>Views</span><span>Velocity</span><span>Action</span></div><VideoRows videos={filteredVideos} setSelectedId={setSelectedId} toggleSaved={toggleSaved} setDownloadModal={setDownloadModal} setFolderModal={setFolderModal} /></div>; }
 function VideoRows({ videos: rows, setSelectedId, toggleSaved, setDownloadModal, setFolderModal }: { videos: VideoItem[]; setSelectedId: (id: string) => void; toggleSaved: (id: string) => void; setDownloadModal: (v: boolean) => void; setFolderModal: (v: boolean) => void }) { return <div className="videoRows">{rows.map((video) => <article className="videoRow" key={video.id} onClick={() => setSelectedId(video.id)}><div className="rank"><b>{video.rank}</b><em>▲ {Math.max(2, 14 - video.rank)}</em></div><Link className="videoInfo" href={`/videos/${video.id}`}><VideoThumb video={video} /><div><h3>{video.title}</h3><p>{video.channel} · {video.uploaded} · {video.category}</p></div></Link><span className="pill">{video.template}</span><strong className="mono">{video.views}</strong>{(() => { const mv = measuredVelocity(video); return <span className="velocity">+{formatCompact(mv.perHour)}/h{!mv.measured && <em className="miniLabel"> 추정</em>}</span>; })()}<div className="rowActions"><button aria-label="북마크" className={video.saved ? 'icon saved' : 'icon'} onClick={(event) => { event.stopPropagation(); toggleSaved(video.id); }}><Star size={13} /></button><button aria-label="구간 다운로드" className="icon" onClick={(event) => { event.stopPropagation(); setSelectedId(video.id); setDownloadModal(true); }}><Download size={13} /></button><button aria-label="폴더 선택" className="icon" onClick={(event) => { event.stopPropagation(); setSelectedId(video.id); setFolderModal(true); }}><MoreHorizontal size={13} /></button></div></article>)}{rows.length === 0 && <div className="emptyState">조건이 너무 좁습니다. 전체 랭킹 보기로 되돌려보세요.</div>}</div>; }
 function ScorecardCurve({ selected }: { selected: VideoItem }) {
@@ -486,7 +515,66 @@ function VidiqInsightPanel({ selected, peers = [], compact = false }: { selected
   </div>;
 }
 function DetailPanel({ selected, peers = [], folderStats, clipStart, clipEnd, setClipStart, setClipEnd, setDownloadModal, assignFolder }: any) { return <aside className="detailPanel"><div className="selectedPreview"><div className="phoneFrame"><VideoPreview video={selected} /></div><div><span className="miniLabel">SELECTED VIDEO</span><h2>{selected.title}</h2><p>{selected.template} · {selected.category} · {selected.uploaded}</p></div></div><VidiqInsightPanel selected={selected} peers={peers} /><div className="clipBox"><div className="boxHead"><Download size={14} /> 구간 선택 다운로드</div><div className="timeline"><span style={{ left: `${clipStart * 2}%` }} /><span style={{ left: `${clipEnd * 2}%` }} /><div style={{ left: `${clipStart * 2}%`, right: `${100 - clipEnd * 2}%` }} /></div><div className="timeInputs"><button onClick={() => setClipStart(3)}>00:{String(clipStart).padStart(2, '0')}</button><button onClick={() => setClipEnd(31)}>00:{String(clipEnd).padStart(2, '0')}</button><button onClick={() => setDownloadModal(true)}>{clipEnd - clipStart}s clip</button></div></div><div className="folderBox"><div className="boxHead"><Archive size={14} /> Raindrop-style folders</div>{folderStats.map((folder: any) => <button className={`folderItem ${selected.folder === folder.name ? 'currentFolder' : ''}`} key={folder.name} onClick={() => assignFolder(folder.name)}><i style={{ background: folder.color }} /><span>{folder.name}</span><em>{folder.count}</em></button>)}</div></aside>; }
-function RankingsPage(props: any) { return <><Hero eyebrow="TREND RANKINGS" title="카테고리에 갇히지 않은 전체 실시간 랭킹." desc="기본은 전체 랭킹입니다. 카테고리와 템플릿은 분석을 위한 보조 축으로만 작동합니다." stats={[[String(props.videos.length), 'visible videos'], ['+78.1K/h', 'top velocity']]} /><FilterRail filters={props.filters} setFilters={props.setFilters} /><section className="widePanel"><RankingPanel filteredVideos={props.videos} {...props} /></section></>; }
+function RankingsPage(props: any) {
+  const [tab, setTab] = useState<'videos' | 'channels'>('videos');
+  return <><Hero eyebrow="TREND RANKINGS" title="실시간 인기 영상과 채널을 한 화면에서." desc="전체 영상 기준 실시간 인기 랭킹과, 그 영상을 만든 채널 단위 성장 랭킹을 탭으로 나눠 봅니다." stats={[[String(props.videos.length), 'visible videos'], ['+78.1K/h', 'top velocity']]} />
+    <section className="rankTabs" aria-label="랭킹 탭">
+      <button className={tab === 'videos' ? 'active' : ''} onClick={() => setTab('videos')}>인기 영상</button>
+      <button className={tab === 'channels' ? 'active' : ''} onClick={() => setTab('channels')}>인기 채널</button>
+    </section>
+    {tab === 'videos'
+      ? <><FilterRail filters={props.filters} setFilters={props.setFilters} /><section className="widePanel"><RankingPanel filteredVideos={props.videos} {...props} /></section></>
+      : <ChannelsTab />}
+  </>;
+}
+const channelSortOptions = [
+  { key: '조회수합계순', label: '조회수 합계' },
+  { key: '급성장순', label: '급성장' },
+  { key: '구독자순', label: '구독자순' },
+] as const;
+function ChannelsTab() {
+  const [sort, setSort] = useState<typeof channelSortOptions[number]['key']>('조회수합계순');
+  const [channels, setChannels] = useState<ChannelSummary[] | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    fetch(`/api/channels?sort=${encodeURIComponent(sort)}`, { cache: 'no-store' })
+      .then(async (response) => {
+        if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+        return response.json() as Promise<{ channels: ChannelSummary[]; total: number }>;
+      })
+      .then((body) => { if (!cancelled) setChannels(body.channels); })
+      .catch((err) => { if (!cancelled) setError(err instanceof Error ? err.message : '알 수 없는 오류'); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [sort]);
+  return <section className="widePanel"><div className="rankPanel">
+    <div className="panelHead"><div><span className="miniLabel">CHANNEL LIVE RANKING</span><h2>실시간 인기 채널</h2><p className="panelSub">전체 영상에서 집계한 채널 단위 성장 랭킹입니다.</p><p className={`serverQuery ${error ? 'error' : ''}`}>{error ? `API fallback: ${error}` : `${loading ? 'syncing' : 'server'} /api/channels?sort=${sort}`}</p></div>
+      <div className="channelSortRow">{channelSortOptions.map((option) => <button key={option.key} className={`ghost small ${sort === option.key ? 'selected' : ''}`} onClick={() => setSort(option.key)}>{option.label}</button>)}</div>
+    </div>
+    <div className="tableHeader channelHeader"><span>Rank</span><span>Channel</span><span>Subs</span><span>Views</span><span>Growth</span><span>Velocity</span></div>
+    <div className="videoRows">
+      {(channels ?? []).map((channel, index) => <article className="videoRow channelRow" key={channel.channelId ?? channel.channel}>
+        <div className="rank"><b>{index + 1}</b></div>
+        {channel.topVideoId
+          ? <Link className="videoInfo" href={`/videos/${channel.topVideoId}`}><ChannelThumb channel={channel} /><div><h3>{channel.channel}</h3><p>{channel.videoCount} videos · {channel.topCategory} · 대표 {channel.topVideoTitle ?? '—'}</p></div></Link>
+          : <div className="videoInfo"><ChannelThumb channel={channel} /><div><h3>{channel.channel}</h3><p>{channel.videoCount} videos · {channel.topCategory}</p></div></div>}
+        <strong className="mono">{channel.subscriberCount == null ? '—' : formatCompact(channel.subscriberCount)}</strong>
+        <strong className="mono">{formatCompact(channel.totalViews)}</strong>
+        <span className="velocity">{channel.growthRatio.toFixed(1)}x</span>
+        <span className="velocity">{channel.topVelocity}</span>
+      </article>)}
+      {!loading && (channels ?? []).length === 0 && <div className="emptyState">집계된 채널이 없습니다. Live sync 후 다시 확인하세요.</div>}
+      {loading && channels === null && <div className="emptyState">채널 랭킹을 불러오는 중입니다.</div>}
+    </div>
+  </div></section>;
+}
+function ChannelThumb({ channel }: { channel: ChannelSummary }) {
+  return <div className={`thumb ${channel.thumbnailUrl ? 'hasImage' : ''}`} style={{ background: channel.gradient }} aria-label={`${channel.channel} thumbnail`}>{channel.thumbnailUrl ? <img src={channel.thumbnailUrl} alt="" loading="lazy" referrerPolicy="no-referrer" /> : <Play size={16} />}<span>{channel.topCategory}</span></div>;
+}
 const youtubeIdFromUrl = (sourceUrl?: string) => {
   if (!sourceUrl) return null;
   try {
@@ -508,36 +596,6 @@ function VideoPreview({ video, size = 'compact' }: { video: VideoItem; size?: 'c
   const href = youtubeId ? `https://www.youtube.com/shorts/${youtubeId}` : video.sourceUrl;
   const body = <><div className={`videoPreviewMedia ${video.thumbnailUrl ? 'hasImage' : ''}`} style={{ background: video.gradient }}>{video.thumbnailUrl ? <img src={video.thumbnailUrl} alt="" loading="lazy" referrerPolicy="no-referrer" /> : <Play size={size === 'large' ? 34 : 22} />}<div className="previewScrim" /><div className="previewPlay"><Play size={size === 'large' ? 18 : 14} /></div><div className="previewMeta"><span>{previewLabel(video)}</span><b>{video.duration}</b></div></div></>;
   return href ? <a className={`videoPreviewFrame ${size}`} href={href} target="_blank" rel="noreferrer" aria-label={`${video.title} preview`}>{body}</a> : <div className={`videoPreviewFrame ${size}`}>{body}</div>;
-}
-function SearchPage(props: any) {
-  const [sourceUrl, setSourceUrl] = useState('');
-  const [title, setTitle] = useState('');
-  const [youtubeQuery, setYoutubeQuery] = useState('');
-  const [language, setLanguage] = useState<VideoItem['language']>('한국어');
-  const submitIngest = async () => {
-    const saved = await props.onIngest({
-      sourceUrl: sourceUrl.trim() || undefined,
-      title: title.trim() || undefined,
-      category: props.activeCategory === '전체' ? '수동 수집' : props.activeCategory,
-      template: props.activeTemplate === '전체' ? '9:16 Full Frame' : props.activeTemplate,
-      language,
-    });
-    if (saved) {
-      setSourceUrl('');
-      setTitle('');
-    }
-  };
-  const submitYoutubeImport = async () => {
-    const saved = await props.onYoutubeImport({
-      query: youtubeQuery.trim(),
-      category: props.activeCategory === '전체' ? 'YouTube 수집' : props.activeCategory,
-      template: props.activeTemplate === '전체' ? undefined : props.activeTemplate,
-      language,
-    });
-    if (saved) setYoutubeQuery('');
-  };
-
-  return <><Hero eyebrow="VIDEO SEARCH" title="니즈 기반으로 영상을 찾고 바로 분석합니다." desc="검색어, 카테고리, 템플릿, 업로드 조건을 조합해 ‘만들 수 있는 레퍼런스’를 빠르게 찾는 화면입니다." stats={[[String(props.filteredVideos.length), 'matched'], ['15/14', 'cat/template']]} /><section className="searchWorkbench"><div className="facetPanel"><h2>Search facets</h2><p>카테고리와 템플릿을 여러 조합으로 좁히는 프로토타입입니다.</p><div className="taxonomyBlock"><span>카테고리</span><div>{categoryOptions.map((cat) => <button className={props.activeCategory === cat ? 'activeChip' : ''} key={cat} onClick={() => props.setActiveCategory(cat)}>{cat}</button>)}</div></div><div className="taxonomyBlock"><span>템플릿</span><div>{templateOptions.map((tpl) => <button className={props.activeTemplate === tpl ? 'activeChip' : ''} key={tpl} onClick={() => props.setActiveTemplate(tpl)}>{tpl}</button>)}</div></div><div className="ingestBox"><span className="miniLabel">YOUTUBE DATA API</span><input aria-label="YouTube keyword" placeholder="키워드로 Shorts 후보 수집" value={youtubeQuery} onChange={(event) => setYoutubeQuery(event.target.value)} /><button className="primary wide" onClick={() => { void submitYoutubeImport(); }} disabled={props.youtubeImporting || !youtubeQuery.trim()}><Search size={14} /> {props.youtubeImporting ? 'API 수집 중' : '키워드 수집'}</button></div><div className="ingestBox"><span className="miniLabel">ADD REFERENCE</span><input aria-label="YouTube Shorts URL" placeholder="YouTube Shorts URL 또는 레퍼런스 URL" value={sourceUrl} onChange={(event) => setSourceUrl(event.target.value)} /><input aria-label="Manual title" placeholder="수동 제목 fallback" value={title} onChange={(event) => setTitle(event.target.value)} /><div className="segmentedMini">{(['한국어', '영어', '기타'] as const).map((item) => <button key={item} className={language === item ? 'activeChip' : ''} onClick={() => setLanguage(item)}>{item}</button>)}</div><button className="primary wide" onClick={() => { void submitIngest(); }} disabled={props.ingesting || (!sourceUrl.trim() && !title.trim())}><Search size={14} /> {props.ingesting ? '수집 중' : '레퍼런스 추가'}</button></div></div><div className="rankPanel"><div className="panelHead"><div><span className="miniLabel">SEARCH RESULTS</span><h2>검색 결과</h2><p className="panelSub">{props.activeCategory} · {props.activeTemplate}</p><p className={`serverQuery ${props.discoveryError ? 'error' : ''}`}>{props.discoveryError ? `API fallback: ${props.discoveryError}` : `${props.discoveryLoading ? 'syncing' : 'server'} ${props.serverQueryUrl}`}</p></div></div><div className="tableHeader"><span>Rank</span><span>Video</span><span>Template</span><span>Views</span><span>Velocity</span><span>Action</span></div><VideoRows videos={props.filteredVideos} {...props} /></div></section></>;
 }
 function SavedPage(props: any) { return <><Hero eyebrow="SAVED LIBRARY" title="저장한 영상과 템플릿을 작업 보드처럼 관리합니다." desc="Raindrop처럼 저장하되, 숏츠 제작 관점의 폴더·태그·다운로드 후보로 이어집니다." stats={[[String(props.videos.length), 'saved now'], ['4', 'folders']]} /><section className="widePanel"><RankingPanel filteredVideos={props.videos} activeCategory="저장됨" activeTemplate="전체" activeFilter="Saved" {...props} /></section></>; }
 function FoldersPage({ folderStats, videos: rows, downloads, setSelectedId, toggleSaved, setDownloadModal, setFolderModal }: { folderStats: FolderItem[]; videos: VideoItem[]; downloads: DownloadClip[]; setSelectedId: (id: string) => void; toggleSaved: (id: string) => void; setDownloadModal: (v: boolean) => void; setFolderModal: (v: boolean) => void }) {
@@ -624,7 +682,7 @@ function VideoNotFoundPage({ requestedId, totalVideos }: { requestedId: string; 
       <span className="miniLabel">VIDEO DETAIL · NOT FOUND</span>
       <h1>이 숏츠는 현재 인덱스에 없습니다.</h1>
       <p><b>{requestedId}</b>는 GET /api/videos/{requestedId}에서 404로 응답했습니다. 저장된 {totalVideos.toLocaleString()}개 영상 중 다른 영상으로 자동 대체하지 않고, 수집 누락 또는 삭제된 레퍼런스로 표시합니다.</p>
-      <div className="detailActions"><Link className="primary" href="/rankings"><BarChart3 size={14} /> 랭킹에서 다시 선택</Link><Link className="ghost" href="/search"><Search size={14} /> 검색으로 이동</Link></div>
+      <div className="detailActions"><Link className="primary" href="/rankings"><BarChart3 size={14} /> 랭킹에서 다시 선택</Link><Link className="ghost" href="/"><LayoutDashboard size={14} /> 대시보드로 이동</Link></div>
     </div>
   </section>;
 }

@@ -237,6 +237,12 @@ h1 {
 .kpi strong { display: block; margin-top: 8px; font-size: 24px; line-height: 1; font-weight: 510; letter-spacing: -.04em; }
 .kpi em { display: block; margin-top: 9px; color: var(--green); font-size: 11px; font-style: normal; }
 
+.ingestRail { margin-top: 14px; padding: 14px; border: 1px solid var(--border); border-radius: 14px; background: rgba(255,255,255,.022); }
+.ingestRailHead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.ingestRailHead p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.ingestRailGrid { margin-top: 12px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start; }
+.ingestRailGrid .ingestBox { margin-top: 0; }
+
 .filterRail {
   margin-top: 14px;
   padding: 9px;
@@ -371,6 +377,12 @@ h1 {
 .videoRow { display: grid; grid-template-columns: 46px minmax(190px, 1fr) 108px 70px 84px 78px; gap: 8px; align-items: center; padding: 11px 14px; border-bottom: 1px solid var(--border-soft); }
 .videoRow:hover { background: rgba(255,255,255,.02); }
 .videoRow.selectedRow { background: rgba(113,112,255,.065); box-shadow: inset 2px 0 0 rgba(113,112,255,.9); }
+
+.rankTabs { margin-top: 16px; display: inline-flex; gap: 4px; padding: 4px; border: 1px solid var(--border); border-radius: 999px; background: rgba(255,255,255,.022); }
+.rankTabs button { height: 30px; padding: 0 16px; border: 0; border-radius: 999px; background: transparent; color: var(--muted); font-size: 12px; font-weight: 510; cursor: pointer; }
+.rankTabs button.active { background: rgba(113,112,255,.16); color: var(--text); box-shadow: inset 0 0 0 1px rgba(113,112,255,.28); }
+.channelSortRow { display: flex; flex-wrap: wrap; gap: 6px; }
+.channelHeader, .channelRow { grid-template-columns: 46px minmax(190px, 1fr) 74px 74px 64px 78px; }
 .rank b { display: block; font-size: 15px; font-weight: 590; }
 .rank em { color: var(--green); font-size: 11px; font-style: normal; }
 .videoInfo { display: flex; align-items: center; gap: 11px; min-width: 0; }
@@ -595,20 +607,21 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
 .segmentedMini { display: flex; flex-wrap: wrap; gap: 6px; }
 .segmentedMini button { height: 28px; border: 1px solid var(--border-soft); border-radius: 999px; background: rgba(255,255,255,.03); color: var(--muted); padding: 0 10px; font-size: 11px; }
 .segmentedMini button.activeChip { border-color: rgba(113,112,255,.42); background: rgba(113,112,255,.14); color: var(--silver); }
-.folderGridLarge { margin-top: 18px; display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; }
-.folderCardLarge { padding: 16px; overflow: hidden; }
+.folderGridLarge { margin-top: 16px; display: grid; grid-template-columns: repeat(auto-fill, minmax(192px, 1fr)); gap: 10px; }
+.folderCardLarge { padding: 12px; overflow: hidden; }
 .folderCardButton { width: 100%; min-width: 0; color: var(--silver); text-align: left; cursor: pointer; }
 .folderCardButton:hover, .selectedFolderCard { border-color: rgba(113,112,255,.34); background: radial-gradient(circle at 100% 0%, rgba(113,112,255,.11), transparent 46%), rgba(255,255,255,.03); }
 .selectedFolderCard { box-shadow: inset 0 0 0 1px rgba(113,112,255,.16); }
-.folderCardLarge > i { width: 12px; height: 12px; display: block; border-radius: 50%; box-shadow: 0 0 0 6px rgba(255,255,255,.035); }
-.folderCardLarge h2 { margin-top: 22px; }
-.folderCardLarge strong { display: block; margin-top: 16px; font-size: 28px; font-weight: 510; letter-spacing: -.05em; }
-.folderPreviewStack { height: 88px; margin-top: 16px; position: relative; }
-.folderPreviewStack span { position: absolute; bottom: 0; width: 56px; height: 82px; border-radius: 11px; border: 1px solid rgba(255,255,255,.12); box-shadow: 0 18px 38px rgba(0,0,0,.28); }
+.folderCardLarge > i { width: 10px; height: 10px; display: block; border-radius: 50%; box-shadow: 0 0 0 5px rgba(255,255,255,.035); }
+.folderCardLarge h2 { margin-top: 14px; font-size: 15px; }
+.folderCardLarge p { margin-top: 4px; }
+.folderCardLarge strong { display: block; margin-top: 10px; font-size: 21px; font-weight: 510; letter-spacing: -.05em; }
+.folderPreviewStack { height: 58px; margin-top: 12px; position: relative; }
+.folderPreviewStack span { position: absolute; bottom: 0; width: 38px; height: 54px; border-radius: 8px; border: 1px solid rgba(255,255,255,.12); box-shadow: 0 12px 26px rgba(0,0,0,.28); }
 .folderPreviewStack span:nth-child(1) { left: 0; transform: rotate(-6deg); }
-.folderPreviewStack span:nth-child(2) { left: 42px; transform: rotate(3deg); }
-.folderPreviewStack span:nth-child(3) { left: 84px; transform: rotate(9deg); }
-.folderPreviewStack em { position: absolute; left: 0; bottom: 0; width: 96px; height: 72px; display: grid; place-items: center; border: 1px dashed var(--border); border-radius: 11px; color: var(--muted-2); font-size: 11px; font-style: normal; }
+.folderPreviewStack span:nth-child(2) { left: 28px; transform: rotate(3deg); }
+.folderPreviewStack span:nth-child(3) { left: 56px; transform: rotate(9deg); }
+.folderPreviewStack em { position: absolute; left: 0; bottom: 0; width: 64px; height: 48px; display: grid; place-items: center; border: 1px dashed var(--border); border-radius: 8px; color: var(--muted-2); font-size: 11px; font-style: normal; }
 .folderWorkspace { margin-top: 12px; display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 12px; align-items: start; }
 .folderSummaryPanel { padding: 16px; border: 1px solid var(--border); border-radius: 16px; background: rgba(255,255,255,.022); }
 .folderSummaryPanel h2 { margin: 8px 0 0; font-size: 20px; font-weight: 510; letter-spacing: -.03em; }

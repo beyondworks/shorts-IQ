@@ -103,6 +103,13 @@ async function runDiscoveryFlow(page) {
   record("template explorer nav removed", (await page.getByRole("link", { name: "Template Explorer" }).count()) === 0);
   record("channel-scale filter present (pint benchmark)", (await page.getByRole("button", { name: /채널규모/ }).count()) > 0);
   await assertNoHorizontalOverflow(page, "rankings desktop overflow");
+
+  // 인기 채널 탭 (실시간 인기 채널)
+  await page.getByRole("button", { name: "인기 채널" }).click();
+  await page.waitForResponse((response) => response.url().includes("/api/channels")).catch(() => {});
+  await page.waitForFunction(() => document.querySelectorAll(".channelRow").length > 0).catch(() => {});
+  record("trend rankings channel tab loads ranked channels", (await page.locator(".channelRow").count()) > 0);
+  await assertNoHorizontalOverflow(page, "channel tab desktop overflow");
 }
 
 async function runReferenceOpsFlow(page) {
@@ -137,7 +144,7 @@ async function runReferenceOpsFlow(page) {
 
 async function runSearchIngestFlow(page) {
   const title = `Browser QA Reference ${Date.now().toString(36)}`;
-  await page.goto(`${baseUrl}/search`);
+  await page.goto(`${baseUrl}/`);
   await page.getByLabel("YouTube keyword").fill("browser qa no key");
   const youtubeResponsePromise = page.waitForResponse((response) => response.url().includes("/api/youtube/search") && response.request().method() === "POST");
   await page.getByRole("button", { name: /키워드 수집/ }).click();
@@ -185,7 +192,7 @@ async function runMobileOverflowFlow(page) {
   const videosResponse = await page.request.get(`${baseUrl}/api/videos`);
   const videosBody = await videosResponse.json().catch(() => ({}));
   const firstVisibleVideoId = videosBody.videos?.[0]?.id || "vid-001";
-  for (const route of ["/", "/rankings", "/search", "/saved", "/folders", "/downloads", "/match", `/videos/${firstVisibleVideoId}`]) {
+  for (const route of ["/", "/rankings", "/saved", "/folders", "/downloads", "/match", `/videos/${firstVisibleVideoId}`]) {
     await page.goto(`${baseUrl}${route}`);
     await page.waitForLoadState("networkidle");
     await assertNoHorizontalOverflow(page, `${route} mobile overflow`);
