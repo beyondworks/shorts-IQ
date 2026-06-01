@@ -1,0 +1,2436 @@
+{
+  "videos": [
+    {
+      "id": "vid-001",
+      "rank": 1,
+      "title": "편의점 신상 조합이 터진 이유",
+      "channel": "Snack Radar",
+      "template": "Product Demo",
+      "category": "푸드",
+      "uploaded": "34m ago",
+      "views": "2.7M",
+      "viewCount": 2748367,
+      "velocity": "+97.6K/h",
+      "saved": true,
+      "folder": "커머스 레퍼런스",
+      "gradient": "linear-gradient(160deg,#f59e0b,#171717 56%,#050505)",
+      "hook": "제품 클로즈업 + 가격/반응 즉시 제시",
+      "retention": "74%",
+      "saveRate": "8.1%",
+      "duration": "00:42",
+      "sourceUrl": "https://www.youtube.com/shorts/seed-001",
+      "publishedAt": "2026-05-31T23:26:00.000Z",
+      "lastSampledAt": "2026-06-01T03:39:06.927Z",
+      "viewsHistory": [
+        {
+          "at": "2026-06-01T00:00:00.000Z",
+          "views": 2420000
+        },
+        {
+          "at": "2026-05-31T16:19:30.376Z",
+          "views": 2442649
+        },
+        {
+          "at": "2026-05-31T16:22:38.008Z",
+          "views": 2465733
+        },
+        {
+          "at": "2026-05-31T16:23:31.024Z",
+          "views": 2489252
+        },
+        {
+          "at": "2026-05-31T16:27:54.150Z",
+          "views": 2513206
+        },
+        {
+          "at": "2026-05-31T16:28:17.171Z",
+          "views": 2537595
+        },
+        {
+          "at": "2026-05-31T16:28:38.672Z",
+          "views": 2562419
+        },
+        {
+          "at": "2026-05-31T16:28:54.949Z",
+          "views": 2587678
+        },
+        {
+          "at": "2026-05-31T16:32:56.513Z",
+          "views": 2613372
+        },
+        {
+          "at": "2026-05-31T16:33:57.987Z",
+          "views": 2639501
+        },
+        {
+          "at": "2026-05-31T23:47:41.844Z",
+          "views": 2666065
+        },
+        {
+          "at": "2026-06-01T00:20:07.970Z",
+          "views": 2693064
+        },
+        {
+          "at": "2026-06-01T03:39:03.984Z",
+          "views": 2720498
+        },
+        {
+          "at": "2026-06-01T03:39:06.927Z",
+          "views": 2748367
+        }
+      ],
+      "language": "한국어",
+      "sourceKind": "seed"
+    },
+    {
+      "id": "vid-002",
+      "rank": 2,
+      "title": "3초 안에 끝나는 노트 정리법",
+      "channel": "Creator Lab KR",
+      "template": "Ranking Hook",
+      "category": "교육",
+      "uploaded": "2h ago",
+      "views": "2.0M",
+      "viewCount": 2026368,
+      "velocity": "+61.0K/h",
+      "saved": true,
+      "folder": "Smoke Test Folder",
+      "gradient": "linear-gradient(160deg,#7170ff,#111827 58%,#050505)",
+      "hook": "숫자형 약속 + 즉시 결과 화면",
+      "retention": "69%",
+      "saveRate": "11.4%",
+      "duration": "00:31",
+      "sourceUrl": "https://www.youtube.com/shorts/seed-002",
+      "publishedAt": "2026-05-31T22:00:00.000Z",
+      "lastSampledAt": "2026-06-01T03:39:06.927Z",
+      "viewsHistory": [
+        {
+          "at": "2026-06-01T00:00:00.000Z",
+          "views": 1840000
+        },
+        {
+          "at": "2026-05-31T16:19:30.376Z",
+          "views": 1851984
+        },
+        {
+          "at": "2026-05-31T16:22:38.008Z",
+          "views": 1864360
+        },
+        {
+          "at": "2026-05-31T16:23:31.024Z",
+          "views": 1877128
+        },
+        {
+          "at": "2026-05-31T16:27:54.150Z",
+          "views": 1890288
+        },
+        {
+          "at": "2026-05-31T16:28:17.171Z",
+          "views": 1903840
+        },
+        {
+          "at": "2026-05-31T16:28:38.672Z",
+          "views": 1917784
+        },
+        {
+          "at": "2026-05-31T16:28:54.949Z",
+          "views": 1932120
+        },
+        {
+          "at": "2026-05-31T16:32:56.513Z",
+          "views": 1946848
+        },
+        {
+          "at": "2026-05-31T16:33:57.987Z",
+          "views": 1961968
+        },
+        {
+          "at": "2026-05-31T23:47:41.844Z",
+          "views": 1977480
+        },
+        {
+          "at": "2026-06-01T00:20:07.970Z",
+          "views": 1993384
+        },
+        {
+          "at": "2026-06-01T03:39:03.984Z",
+          "views": 2009680
+        },
+        {
+          "at": "2026-06-01T03:39:06.927Z",
+          "views": 2026368
+        }
+      ],
+      "language": "한국어",
+      "sourceKind": "seed"
+    },
+    {
+      "id": "vid-003",
+      "rank": 3,
+      "title": "아이돌 직캠에서 다시 뜬 전환 컷",
+      "channel": "Stage Loop",
+      "template": "Challenge Loop",
+      "category": "엔터",
+      "uploaded": "3h ago",
+      "views": "1.5M",
+      "viewCount": 1463036,
+      "velocity": "+52.0K/h",
+      "saved": false,
+      "folder": "",
+      "gradient": "linear-gradient(160deg,#ec4899,#111827 58%,#050505)",
+      "hook": "음악 비트와 반복 루프가 저장/공유를 유도",
+      "retention": "81%",
+      "saveRate": "5.9%",
+      "duration": "00:18",
+      "sourceUrl": "https://www.youtube.com/shorts/seed-003",
+      "publishedAt": "2026-05-31T21:00:00.000Z",
+      "lastSampledAt": "2026-06-01T03:39:06.927Z",
+      "viewsHistory": [
+        {
+          "at": "2026-06-01T00:00:00.000Z",
+          "views": 1310000
+        },
+        {
+          "at": "2026-05-31T16:19:30.376Z",
+          "views": 1319828
+        },
+        {
+          "at": "2026-05-31T16:22:38.008Z",
+          "views": 1329980
+        },
+        {
+          "at": "2026-05-31T16:23:31.024Z",
+          "views": 1340456
+        },
+        {
+          "at": "2026-05-31T16:27:54.150Z",
+          "views": 1351256
+        },
+        {
+          "at": "2026-05-31T16:28:17.171Z",
+          "views": 1362380
+        },
+        {
+          "at": "2026-05-31T16:28:38.672Z",
+          "views": 1373828
+        },
+        {
+          "at": "2026-05-31T16:28:54.949Z",
+          "views": 1385600
+        },
+        {
+          "at": "2026-05-31T16:32:56.513Z",
+          "views": 1397696
+        },
+        {
+          "at": "2026-05-31T16:33:57.987Z",
+          "views": 1410116
+        },
+        {
+          "at": "2026-05-31T23:47:41.844Z",
+          "views": 1422860
+        },
+        {
+          "at": "2026-06-01T00:20:07.970Z",
+          "views": 1435928
+        },
+        {
+          "at": "2026-06-01T03:39:03.984Z",
+          "views": 1449320
+        },
+        {
+          "at": "2026-06-01T03:39:06.927Z",
+          "views": 1463036
+        }
+      ],
+      "language": "한국어",
+      "sourceKind": "seed"
+    },
+    {
+      "id": "vid-004",
+      "rank": 4,
+      "title": "출근 전 15분 루틴이 바꾼 것",
+      "channel": "Daily Edit",
+      "template": "IG Caption Card",
+      "category": "라이프스타일",
+      "uploaded": "5h ago",
+      "views": "1.1M",
+      "viewCount": 1109764,
+      "velocity": "+45.5K/h",
+      "saved": false,
+      "folder": "",
+      "gradient": "linear-gradient(160deg,#06b6d4,#111827 54%,#050505)",
+      "hook": "감정 변화 전후 + 짧은 캡션 카드",
+      "retention": "63%",
+      "saveRate": "9.7%",
+      "duration": "00:36",
+      "sourceUrl": "https://www.youtube.com/shorts/seed-004",
+      "publishedAt": "2026-05-31T19:00:00.000Z",
+      "lastSampledAt": "2026-06-01T03:39:06.927Z",
+      "viewsHistory": [
+        {
+          "at": "2026-06-01T00:00:00.000Z",
+          "views": 982000
+        },
+        {
+          "at": "2026-05-31T16:19:30.376Z",
+          "views": 990112
+        },
+        {
+          "at": "2026-05-31T16:22:38.008Z",
+          "views": 998510
+        },
+        {
+          "at": "2026-05-31T16:23:31.024Z",
+          "views": 1007194
+        },
+        {
+          "at": "2026-05-31T16:27:54.150Z",
+          "views": 1016164
+        },
+        {
+          "at": "2026-05-31T16:28:17.171Z",
+          "views": 1025420
+        },
+        {
+          "at": "2026-05-31T16:28:38.672Z",
+          "views": 1034962
+        },
+        {
+          "at": "2026-05-31T16:28:54.949Z",
+          "views": 1044790
+        },
+        {
+          "at": "2026-05-31T16:32:56.513Z",
+          "views": 1054904
+        },
+        {
+          "at": "2026-05-31T16:33:57.987Z",
+          "views": 1065304
+        },
+        {
+          "at": "2026-05-31T23:47:41.844Z",
+          "views": 1075990
+        },
+        {
+          "at": "2026-06-01T00:20:07.970Z",
+          "views": 1086962
+        },
+        {
+          "at": "2026-06-01T03:39:03.984Z",
+          "views": 1098220
+        },
+        {
+          "at": "2026-06-01T03:39:06.927Z",
+          "views": 1109764
+        }
+      ],
+      "language": "한국어",
+      "sourceKind": "seed"
+    },
+    {
+      "id": "vid-005",
+      "rank": 5,
+      "title": "AI로 1분 광고 만드는 실제 과정",
+      "channel": "Prompt Studio",
+      "template": "9:16 Full Frame",
+      "category": "AI/테크",
+      "uploaded": "8h ago",
+      "views": "825K",
+      "viewCount": 824525,
+      "velocity": "+32.7K/h",
+      "saved": true,
+      "folder": "다운로드 후보",
+      "gradient": "linear-gradient(160deg,#10b981,#111827 60%,#050505)",
+      "hook": "작업 화면 풀프레임 + 결과물 컷",
+      "retention": "71%",
+      "saveRate": "13.2%",
+      "duration": "00:58",
+      "sourceUrl": "https://www.youtube.com/shorts/seed-005",
+      "publishedAt": "2026-05-31T16:00:00.000Z",
+      "lastSampledAt": "2026-06-01T03:39:06.927Z",
+      "viewsHistory": [
+        {
+          "at": "2026-06-01T00:00:00.000Z",
+          "views": 741000
+        },
+        {
+          "at": "2026-05-31T16:19:30.376Z",
+          "views": 745925
+        },
+        {
+          "at": "2026-05-31T16:22:38.008Z",
+          "views": 751100
+        },
+        {
+          "at": "2026-05-31T16:23:31.024Z",
+          "views": 756525
+        },
+        {
+          "at": "2026-05-31T16:27:54.150Z",
+          "views": 762200
+        },
+        {
+          "at": "2026-05-31T16:28:17.171Z",
+          "views": 768125
+        },
+        {
+          "at": "2026-05-31T16:28:38.672Z",
+          "views": 774300
+        },
+        {
+          "at": "2026-05-31T16:28:54.949Z",
+          "views": 780725
+        },
+        {
+          "at": "2026-05-31T16:32:56.513Z",
+          "views": 787400
+        },
+        {
+          "at": "2026-05-31T16:33:57.987Z",
+          "views": 794325
+        },
+        {
+          "at": "2026-05-31T23:47:41.844Z",
+          "views": 801500
+        },
+        {
+          "at": "2026-06-01T00:20:07.970Z",
+          "views": 808925
+        },
+        {
+          "at": "2026-06-01T03:39:03.984Z",
+          "views": 816600
+        },
+        {
+          "at": "2026-06-01T03:39:06.927Z",
+          "views": 824525
+        }
+      ],
+      "language": "한국어",
+      "sourceKind": "seed"
+    },
+    {
+      "id": "vid-006",
+      "rank": 6,
+      "title": "올리브영 세일템 5개만 비교",
+      "channel": "Beauty Desk",
+      "template": "Listicle",
+      "category": "뷰티",
+      "uploaded": "9h ago",
+      "views": "773K",
+      "viewCount": 772512,
+      "velocity": "+28.2K/h",
+      "saved": true,
+      "folder": "다운로드 후보",
+      "gradient": "linear-gradient(160deg,#fb7185,#121212 55%,#050505)",
+      "hook": "가격·효과·사용컷을 5단 리스트로 압축",
+      "retention": "61%",
+      "saveRate": "7.8%",
+      "duration": "00:45",
+      "sourceUrl": "https://www.youtube.com/shorts/seed-006",
+      "publishedAt": "2026-05-31T15:00:00.000Z",
+      "lastSampledAt": "2026-06-01T03:39:06.927Z",
+      "viewsHistory": [
+        {
+          "at": "2026-06-01T00:00:00.000Z",
+          "views": 702000
+        },
+        {
+          "at": "2026-05-31T16:19:30.376Z",
+          "views": 706272
+        },
+        {
+          "at": "2026-05-31T16:22:38.008Z",
+          "views": 710736
+        },
+        {
+          "at": "2026-05-31T16:23:31.024Z",
+          "views": 715392
+        },
+        {
+          "at": "2026-05-31T16:27:54.150Z",
+          "views": 720240
+        },
+        {
+          "at": "2026-05-31T16:28:17.171Z",
+          "views": 725280
+        },
+        {
+          "at": "2026-05-31T16:28:38.672Z",
+          "views": 730512
+        },
+        {
+          "at": "2026-05-31T16:28:54.949Z",
+          "views": 735936
+        },
+        {
+          "at": "2026-05-31T16:32:56.513Z",
+          "views": 741552
+        },
+        {
+          "at": "2026-05-31T16:33:57.987Z",
+          "views": 747360
+        },
+        {
+          "at": "2026-05-31T23:47:41.844Z",
+          "views": 753360
+        },
+        {
+          "at": "2026-06-01T00:20:07.970Z",
+          "views": 759552
+        },
+        {
+          "at": "2026-06-01T03:39:03.984Z",
+          "views": 765936
+        },
+        {
+          "at": "2026-06-01T03:39:06.927Z",
+          "views": 772512
+        }
+      ],
+      "language": "한국어",
+      "sourceKind": "seed"
+    },
+    {
+      "id": "vid-007",
+      "rank": 7,
+      "title": "잘 팔리는 상세페이지 첫 화면 비교",
+      "channel": "Commerce Cuts",
+      "template": "Before / After",
+      "category": "커머스",
+      "uploaded": "1d ago",
+      "views": "660K",
+      "viewCount": 659943,
+      "velocity": "+20.6K/h",
+      "saved": false,
+      "folder": "",
+      "gradient": "linear-gradient(160deg,#f59e0b,#151515 55%,#050505)",
+      "hook": "Before/After 분할 + 한 줄 진단",
+      "retention": "66%",
+      "saveRate": "12.5%",
+      "duration": "00:39",
+      "sourceUrl": "https://www.youtube.com/shorts/seed-007",
+      "publishedAt": "2026-05-31T00:00:00.000Z",
+      "lastSampledAt": "2026-06-01T03:39:06.927Z",
+      "viewsHistory": [
+        {
+          "at": "2026-06-01T00:00:00.000Z",
+          "views": 613000
+        },
+        {
+          "at": "2026-05-31T16:19:30.376Z",
+          "views": 615645
+        },
+        {
+          "at": "2026-05-31T16:22:38.008Z",
+          "views": 618451
+        },
+        {
+          "at": "2026-05-31T16:23:31.024Z",
+          "views": 621418
+        },
+        {
+          "at": "2026-05-31T16:27:54.150Z",
+          "views": 624546
+        },
+        {
+          "at": "2026-05-31T16:28:17.171Z",
+          "views": 627835
+        },
+        {
+          "at": "2026-05-31T16:28:38.672Z",
+          "views": 631285
+        },
+        {
+          "at": "2026-05-31T16:28:54.949Z",
+          "views": 634896
+        },
+        {
+          "at": "2026-05-31T16:32:56.513Z",
+          "views": 638668
+        },
+        {
+          "at": "2026-05-31T16:33:57.987Z",
+          "views": 642601
+        },
+        {
+          "at": "2026-05-31T23:47:41.844Z",
+          "views": 646695
+        },
+        {
+          "at": "2026-06-01T00:20:07.970Z",
+          "views": 650950
+        },
+        {
+          "at": "2026-06-01T03:39:03.984Z",
+          "views": 655366
+        },
+        {
+          "at": "2026-06-01T03:39:06.927Z",
+          "views": 659943
+        }
+      ],
+      "language": "한국어",
+      "sourceKind": "seed"
+    },
+    {
+      "id": "vid-008",
+      "rank": 8,
+      "title": "요즘 뜨는 자막 후킹 패턴 7개",
+      "channel": "Shorts Pattern",
+      "template": "Caption Meme",
+      "category": "마케팅",
+      "uploaded": "1d ago",
+      "views": "625K",
+      "viewCount": 624608,
+      "velocity": "+16.3K/h",
+      "saved": false,
+      "folder": "",
+      "gradient": "linear-gradient(160deg,#8b5cf6,#101010 55%,#050505)",
+      "hook": "리스트형 약속 + 빠른 예시 전환",
+      "retention": "68%",
+      "saveRate": "15.1%",
+      "duration": "00:49",
+      "sourceUrl": "https://www.youtube.com/shorts/seed-008",
+      "publishedAt": "2026-05-31T00:00:00.000Z",
+      "lastSampledAt": "2026-06-01T03:39:06.927Z",
+      "viewsHistory": [
+        {
+          "at": "2026-06-01T00:00:00.000Z",
+          "views": 588000
+        },
+        {
+          "at": "2026-05-31T16:19:30.376Z",
+          "views": 590156
+        },
+        {
+          "at": "2026-05-31T16:22:38.008Z",
+          "views": 592422
+        },
+        {
+          "at": "2026-05-31T16:23:31.024Z",
+          "views": 594798
+        },
+        {
+          "at": "2026-05-31T16:27:54.150Z",
+          "views": 597284
+        },
+        {
+          "at": "2026-05-31T16:28:17.171Z",
+          "views": 599880
+        },
+        {
+          "at": "2026-05-31T16:28:38.672Z",
+          "views": 602586
+        },
+        {
+          "at": "2026-05-31T16:28:54.949Z",
+          "views": 605402
+        },
+        {
+          "at": "2026-05-31T16:32:56.513Z",
+          "views": 608328
+        },
+        {
+          "at": "2026-05-31T16:33:57.987Z",
+          "views": 611364
+        },
+        {
+          "at": "2026-05-31T23:47:41.844Z",
+          "views": 614510
+        },
+        {
+          "at": "2026-06-01T00:20:07.970Z",
+          "views": 617766
+        },
+        {
+          "at": "2026-06-01T03:39:03.984Z",
+          "views": 621132
+        },
+        {
+          "at": "2026-06-01T03:39:06.927Z",
+          "views": 624608
+        }
+      ],
+      "language": "한국어",
+      "sourceKind": "seed"
+    },
+    {
+      "id": "vid-009",
+      "rank": 9,
+      "title": "러닝 초보가 무릎 아플 때 바꾸는 것",
+      "channel": "Fit Minute",
+      "template": "Tutorial Steps",
+      "category": "운동",
+      "uploaded": "1d ago",
+      "views": "457K",
+      "viewCount": 457208,
+      "velocity": "+12.4K/h",
+      "saved": false,
+      "folder": "",
+      "gradient": "linear-gradient(160deg,#22c55e,#111827 56%,#050505)",
+      "hook": "잘못된 동작→수정 동작 3단계",
+      "retention": "73%",
+      "saveRate": "10.9%",
+      "duration": "00:52",
+      "sourceUrl": "https://www.youtube.com/shorts/seed-009",
+      "publishedAt": "2026-05-31T00:00:00.000Z",
+      "lastSampledAt": "2026-06-01T03:39:06.927Z",
+      "viewsHistory": [
+        {
+          "at": "2026-06-01T00:00:00.000Z",
+          "views": 431000
+        },
+        {
+          "at": "2026-05-31T16:19:30.376Z",
+          "views": 432512
+        },
+        {
+          "at": "2026-05-31T16:22:38.008Z",
+          "views": 434108
+        },
+        {
+          "at": "2026-05-31T16:23:31.024Z",
+          "views": 435788
+        },
+        {
+          "at": "2026-05-31T16:27:54.150Z",
+          "views": 437552
+        },
+        {
+          "at": "2026-05-31T16:28:17.171Z",
+          "views": 439400
+        },
+        {
+          "at": "2026-05-31T16:28:38.672Z",
+          "views": 441332
+        },
+        {
+          "at": "2026-05-31T16:28:54.949Z",
+          "views": 443348
+        },
+        {
+          "at": "2026-05-31T16:32:56.513Z",
+          "views": 445448
+        },
+        {
+          "at": "2026-05-31T16:33:57.987Z",
+          "views": 447632
+        },
+        {
+          "at": "2026-05-31T23:47:41.844Z",
+          "views": 449900
+        },
+        {
+          "at": "2026-06-01T00:20:07.970Z",
+          "views": 452252
+        },
+        {
+          "at": "2026-06-01T03:39:03.984Z",
+          "views": 454688
+        },
+        {
+          "at": "2026-06-01T03:39:06.927Z",
+          "views": 457208
+        }
+      ],
+      "language": "한국어",
+      "sourceKind": "seed"
+    },
+    {
+      "id": "vid-010",
+      "rank": 10,
+      "title": "오늘 환율 뉴스 30초 요약",
+      "channel": "Money Snap",
+      "template": "News Explainer",
+      "category": "재테크",
+      "uploaded": "1d ago",
+      "views": "410K",
+      "viewCount": 409540,
+      "velocity": "+10.0K/h",
+      "saved": false,
+      "folder": "",
+      "gradient": "linear-gradient(160deg,#38bdf8,#111827 56%,#050505)",
+      "hook": "뉴스 원인→영향→체크포인트 구조",
+      "retention": "58%",
+      "saveRate": "6.4%",
+      "duration": "00:30",
+      "sourceUrl": "https://www.youtube.com/shorts/seed-010",
+      "publishedAt": "2026-05-31T00:00:00.000Z",
+      "lastSampledAt": "2026-06-01T03:39:06.927Z",
+      "viewsHistory": [
+        {
+          "at": "2026-06-01T00:00:00.000Z",
+          "views": 389000
+        },
+        {
+          "at": "2026-05-31T16:19:30.376Z",
+          "views": 390220
+        },
+        {
+          "at": "2026-05-31T16:22:38.008Z",
+          "views": 391500
+        },
+        {
+          "at": "2026-05-31T16:23:31.024Z",
+          "views": 392840
+        },
+        {
+          "at": "2026-05-31T16:27:54.150Z",
+          "views": 394240
+        },
+        {
+          "at": "2026-05-31T16:28:17.171Z",
+          "views": 395700
+        },
+        {
+          "at": "2026-05-31T16:28:38.672Z",
+          "views": 397220
+        },
+        {
+          "at": "2026-05-31T16:28:54.949Z",
+          "views": 398800
+        },
+        {
+          "at": "2026-05-31T16:32:56.513Z",
+          "views": 400440
+        },
+        {
+          "at": "2026-05-31T16:33:57.987Z",
+          "views": 402140
+        },
+        {
+          "at": "2026-05-31T23:47:41.844Z",
+          "views": 403900
+        },
+        {
+          "at": "2026-06-01T00:20:07.970Z",
+          "views": 405720
+        },
+        {
+          "at": "2026-06-01T03:39:03.984Z",
+          "views": 407600
+        },
+        {
+          "at": "2026-06-01T03:39:06.927Z",
+          "views": 409540
+        }
+      ],
+      "language": "한국어",
+      "sourceKind": "seed"
+    },
+    {
+      "id": "yt-pU2PjckmZdY",
+      "rank": 11,
+      "title": "Korean #Hair transformation 🔥 #shorts",
+      "channel": "The Opulent Aura Salon",
+      "template": "9:16 Full Frame",
+      "category": "YouTube 수집",
+      "uploaded": "490d ago",
+      "views": "183M",
+      "viewCount": 182922580,
+      "velocity": "+15.8K/h",
+      "saved": true,
+      "folder": "YouTube 수집",
+      "gradient": "linear-gradient(160deg,#7170ff,#111827 58%,#050505)",
+      "hook": "YouTube Data API 수집: korean shorts 검색 결과에서 조회수, 길이, 게시일을 보강했습니다.",
+      "retention": "67%",
+      "saveRate": "1.8%",
+      "duration": "00:19",
+      "sourceUrl": "https://www.youtube.com/shorts/pU2PjckmZdY",
+      "thumbnailUrl": "https://i.ytimg.com/vi/pU2PjckmZdY/maxresdefault.jpg",
+      "publishedAt": "2025-01-26T20:11:19Z",
+      "lastSampledAt": "2026-06-01T03:39:06.927Z",
+      "ingestedAt": "2026-06-01T00:04:19.383Z",
+      "sourceKind": "youtube-api",
+      "language": "한국어",
+      "viewsHistory": [
+        {
+          "at": "2026-06-01T00:04:19.383Z",
+          "views": 182913688
+        },
+        {
+          "at": "2026-06-01T00:20:07.970Z",
+          "views": 182916633
+        },
+        {
+          "at": "2026-06-01T03:39:03.984Z",
+          "views": 182919597
+        },
+        {
+          "at": "2026-06-01T03:39:06.927Z",
+          "views": 182922580
+        }
+      ]
+    },
+    {
+      "id": "yt-j5zwL9fCXBo",
+      "rank": 12,
+      "title": "(Customer Vs Shop Keeper 😂) ~ New Funny Korean Video 😍 #movie #doonakdrama #koreandrama",
+      "channel": "Sudha L Stories",
+      "template": "9:16 Full Frame",
+      "category": "YouTube 수집",
+      "uploaded": "288d ago",
+      "views": "112M",
+      "viewCount": 111674253,
+      "velocity": "+16.4K/h",
+      "saved": true,
+      "folder": "YouTube 수집",
+      "gradient": "linear-gradient(160deg,#f59e0b,#171717 58%,#050505)",
+      "hook": "YouTube Data API 수집: korean shorts 검색 결과에서 조회수, 길이, 게시일을 보강했습니다.",
+      "retention": "61%",
+      "saveRate": "1.8%",
+      "duration": "01:00",
+      "sourceUrl": "https://www.youtube.com/shorts/j5zwL9fCXBo",
+      "thumbnailUrl": "https://i.ytimg.com/vi/j5zwL9fCXBo/maxresdefault.jpg",
+      "publishedAt": "2025-08-16T12:30:50Z",
+      "lastSampledAt": "2026-06-01T03:39:06.927Z",
+      "ingestedAt": "2026-06-01T00:04:19.383Z",
+      "sourceKind": "youtube-api",
+      "language": "한국어",
+      "viewsHistory": [
+        {
+          "at": "2026-06-01T00:04:19.383Z",
+          "views": 111665019
+        },
+        {
+          "at": "2026-06-01T00:20:07.970Z",
+          "views": 111668078
+        },
+        {
+          "at": "2026-06-01T03:39:03.984Z",
+          "views": 111671156
+        },
+        {
+          "at": "2026-06-01T03:39:06.927Z",
+          "views": 111674253
+        }
+      ]
+    },
+    {
+      "id": "yt-4FSXVDezaaA",
+      "rank": 13,
+      "title": "💕Jini \" Granddaughter and Grandfather Sad Story 😍🥀💯 ~ Korean Drama | #love #shorts #bts #tiktok",
+      "channel": "Sweet Love 😍",
+      "template": "9:16 Full Frame",
+      "category": "YouTube 수집",
+      "uploaded": "659d ago",
+      "views": "47M",
+      "viewCount": 46590435,
+      "velocity": "+3.2K/h",
+      "saved": true,
+      "folder": "YouTube 수집",
+      "gradient": "linear-gradient(160deg,#7170ff,#111827 58%,#050505)",
+      "hook": "YouTube Data API 수집: korean shorts 검색 결과에서 조회수, 길이, 게시일을 보강했습니다.",
+      "retention": "58%",
+      "saveRate": "4.1%",
+      "duration": "00:51",
+      "sourceUrl": "https://www.youtube.com/shorts/4FSXVDezaaA",
+      "thumbnailUrl": "https://i.ytimg.com/vi/4FSXVDezaaA/maxresdefault.jpg",
+      "publishedAt": "2024-08-10T14:00:04Z",
+      "lastSampledAt": "2026-06-01T03:39:06.927Z",
+      "ingestedAt": "2026-06-01T00:04:19.383Z",
+      "sourceKind": "youtube-api",
+      "language": "한국어",
+      "viewsHistory": [
+        {
+          "at": "2026-06-01T00:04:19.383Z",
+          "views": 46588725
+        },
+        {
+          "at": "2026-06-01T00:20:07.970Z",
+          "views": 46589276
+        },
+        {
+          "at": "2026-06-01T03:39:03.984Z",
+          "views": 46589846
+        },
+        {
+          "at": "2026-06-01T03:39:06.927Z",
+          "views": 46590435
+        }
+      ]
+    },
+    {
+      "id": "yt-gxbemel07xI",
+      "rank": 14,
+      "title": "#한국바이럴 #웃긴영상 #코미디 #꿀잼 #유튜브쇼츠 #쇼츠 #바이럴 #트렌드 #재미 #웃음#웃긴영상#개그#코미디#웃음#재미#꿀잼#웃겨요#유튜브#유튜브쇼츠#쇼츠#숏츠#영상추천",
+      "channel": "Village Entertainment 2.0.2",
+      "template": "Ranking Hook",
+      "category": "YouTube 수집",
+      "uploaded": "57d ago",
+      "views": "22M",
+      "viewCount": 21600506,
+      "velocity": "+16.0K/h",
+      "saved": true,
+      "folder": "YouTube 수집",
+      "gradient": "linear-gradient(160deg,#10b981,#111827 58%,#050505)",
+      "hook": "YouTube Data API 수집: 한국 쇼츠 트렌드 검색 결과에서 조회수, 길이, 게시일을 보강했습니다.",
+      "retention": "67%",
+      "saveRate": "1.8%",
+      "duration": "00:22",
+      "sourceUrl": "https://www.youtube.com/shorts/gxbemel07xI",
+      "thumbnailUrl": "https://i.ytimg.com/vi/gxbemel07xI/maxresdefault.jpg",
+      "publishedAt": "2026-04-04T14:41:42Z",
+      "lastSampledAt": "2026-06-01T03:39:06.927Z",
+      "ingestedAt": "2026-06-01T00:04:56.109Z",
+      "sourceKind": "youtube-api",
+      "language": "한국어",
+      "viewsHistory": [
+        {
+          "at": "2026-06-01T00:04:56.109Z",
+          "views": 21591500
+        },
+        {
+          "at": "2026-06-01T00:20:07.970Z",
+          "views": 21594483
+        },
+        {
+          "at": "2026-06-01T03:39:03.984Z",
+          "views": 21597485
+        },
+        {
+          "at": "2026-06-01T03:39:06.927Z",
+          "views": 21600506
+        }
+      ]
+    },
+    {
+      "id": "yt-GeqjjZtAiSA",
+      "rank": 15,
+      "title": "#한국바이럴 #웃긴영상 #코미디 #꿀잼 #유튜브쇼츠 #쇼츠 #바이럴 #트렌드 #재미 #웃음#웃긴영상#개그#코미디#웃음#재미#꿀잼#웃겨요#유튜브#유튜브쇼츠#쇼츠#숏츠#영상추천",
+      "channel": "Village Entertainment 2.0.2",
+      "template": "Ranking Hook",
+      "category": "YouTube 수집",
+      "uploaded": "81d ago",
+      "views": "13M",
+      "viewCount": 13307350,
+      "velocity": "+7.2K/h",
+      "saved": true,
+      "folder": "YouTube 수집",
+      "gradient": "linear-gradient(160deg,#7170ff,#111827 58%,#050505)",
+      "hook": "YouTube Data API 수집: 한국 쇼츠 트렌드 검색 결과에서 조회수, 길이, 게시일을 보강했습니다.",
+      "retention": "65%",
+      "saveRate": "1.8%",
+      "duration": "00:12",
+      "sourceUrl": "https://www.youtube.com/shorts/GeqjjZtAiSA",
+      "thumbnailUrl": "https://i.ytimg.com/vi/GeqjjZtAiSA/maxresdefault.jpg",
+      "publishedAt": "2026-03-12T05:21:51Z",
+      "lastSampledAt": "2026-06-01T03:39:06.927Z",
+      "ingestedAt": "2026-06-01T00:04:56.109Z",
+      "sourceKind": "youtube-api",
+      "language": "한국어",
+      "viewsHistory": [
+        {
+          "at": "2026-06-01T00:04:56.109Z",
+          "views": 13303360
+        },
+        {
+          "at": "2026-06-01T00:20:07.970Z",
+          "views": 13304671
+        },
+        {
+          "at": "2026-06-01T03:39:03.984Z",
+          "views": 13306001
+        },
+        {
+          "at": "2026-06-01T03:39:06.927Z",
+          "views": 13307350
+        }
+      ]
+    },
+    {
+      "id": "yt-HTleueMf6pQ",
+      "rank": 16,
+      "title": "북한에서 유행중인 토카댄스 #shorts",
+      "channel": "고농축",
+      "template": "9:16 Full Frame",
+      "category": "YouTube 수집",
+      "uploaded": "1094d ago",
+      "views": "6.2M",
+      "viewCount": 6233669,
+      "velocity": "+1.3K/h",
+      "saved": true,
+      "folder": "YouTube 수집",
+      "gradient": "linear-gradient(160deg,#ec4899,#121212 58%,#050505)",
+      "hook": "YouTube Data API 수집: 한국 쇼츠 트렌드 검색 결과에서 조회수, 길이, 게시일을 보강했습니다.",
+      "retention": "64%",
+      "saveRate": "1.8%",
+      "duration": "00:18",
+      "sourceUrl": "https://www.youtube.com/shorts/HTleueMf6pQ",
+      "thumbnailUrl": "https://i.ytimg.com/vi/HTleueMf6pQ/maxresdefault.jpg",
+      "publishedAt": "2023-06-03T07:12:41Z",
+      "lastSampledAt": "2026-06-01T03:39:06.927Z",
+      "ingestedAt": "2026-06-01T00:04:56.109Z",
+      "sourceKind": "youtube-api",
+      "language": "한국어",
+      "viewsHistory": [
+        {
+          "at": "2026-06-01T00:04:56.109Z",
+          "views": 6233042
+        },
+        {
+          "at": "2026-06-01T00:20:07.970Z",
+          "views": 6233232
+        },
+        {
+          "at": "2026-06-01T03:39:03.984Z",
+          "views": 6233441
+        },
+        {
+          "at": "2026-06-01T03:39:06.927Z",
+          "views": 6233669
+        }
+      ]
+    },
+    {
+      "id": "yt-HAwjQhnUEKw",
+      "rank": 17,
+      "title": "#한국바이럴 #웃긴영상 #코미디 #꿀잼 #유튜브쇼츠 #쇼츠 #바이럴 #트렌드 #재미 #웃음#웃긴영상#개그#코미디#웃음#재미#꿀잼#웃겨요#유튜브#유튜브쇼츠#쇼츠#숏츠#영상추천",
+      "channel": "Village Entertainment 2.0.2",
+      "template": "Ranking Hook",
+      "category": "YouTube 수집",
+      "uploaded": "51d ago",
+      "views": "11M",
+      "viewCount": 11145563,
+      "velocity": "+9.3K/h",
+      "saved": true,
+      "folder": "YouTube 수집",
+      "gradient": "linear-gradient(160deg,#10b981,#111827 58%,#050505)",
+      "hook": "YouTube Data API 수집: 한국 쇼츠 트렌드 검색 결과에서 조회수, 길이, 게시일을 보강했습니다.",
+      "retention": "60%",
+      "saveRate": "1.8%",
+      "duration": "00:39",
+      "sourceUrl": "https://www.youtube.com/shorts/HAwjQhnUEKw",
+      "thumbnailUrl": "https://i.ytimg.com/vi/HAwjQhnUEKw/maxresdefault.jpg",
+      "publishedAt": "2026-04-10T12:44:19Z",
+      "lastSampledAt": "2026-06-01T03:39:06.927Z",
+      "ingestedAt": "2026-06-01T00:04:56.109Z",
+      "sourceKind": "youtube-api",
+      "language": "한국어",
+      "viewsHistory": [
+        {
+          "at": "2026-06-01T00:04:56.109Z",
+          "views": 11140376
+        },
+        {
+          "at": "2026-06-01T00:20:07.970Z",
+          "views": 11142086
+        },
+        {
+          "at": "2026-06-01T03:39:03.984Z",
+          "views": 11143815
+        },
+        {
+          "at": "2026-06-01T03:39:06.927Z",
+          "views": 11145563
+        }
+      ]
+    },
+    {
+      "id": "yt-ZEBo4Xlj6Gs",
+      "rank": 18,
+      "title": "#한국바이럴 #웃긴영상 #코미디 #꿀잼 #유튜브쇼츠 #쇼츠 #바이럴 #트렌드 #재미 #웃음#웃긴영상#개그#코미디#웃음#재미#꿀잼#웃겨요#유튜브#유튜브쇼츠#쇼츠#숏츠#영상추천",
+      "channel": "Village Entertainment 2.0.2",
+      "template": "Ranking Hook",
+      "category": "YouTube 수집",
+      "uploaded": "63d ago",
+      "views": "12M",
+      "viewCount": 12141684,
+      "velocity": "+8.4K/h",
+      "saved": true,
+      "folder": "YouTube 수집",
+      "gradient": "linear-gradient(160deg,#f59e0b,#171717 58%,#050505)",
+      "hook": "YouTube Data API 수집: 한국 쇼츠 트렌드 검색 결과에서 조회수, 길이, 게시일을 보강했습니다.",
+      "retention": "65%",
+      "saveRate": "1.8%",
+      "duration": "00:17",
+      "sourceUrl": "https://www.youtube.com/shorts/ZEBo4Xlj6Gs",
+      "thumbnailUrl": "https://i.ytimg.com/vi/ZEBo4Xlj6Gs/maxresdefault.jpg",
+      "publishedAt": "2026-03-30T11:52:04Z",
+      "lastSampledAt": "2026-06-01T03:39:06.927Z",
+      "ingestedAt": "2026-06-01T00:04:56.109Z",
+      "sourceKind": "youtube-api",
+      "language": "한국어",
+      "viewsHistory": [
+        {
+          "at": "2026-06-01T00:04:56.109Z",
+          "views": 12137010
+        },
+        {
+          "at": "2026-06-01T00:20:07.970Z",
+          "views": 12138549
+        },
+        {
+          "at": "2026-06-01T03:39:03.984Z",
+          "views": 12140107
+        },
+        {
+          "at": "2026-06-01T03:39:06.927Z",
+          "views": 12141684
+        }
+      ]
+    },
+    {
+      "id": "yt-Eyd3w1OpCVA",
+      "rank": 19,
+      "title": "Instant Abs Silicone Tutorial",
+      "channel": "승비니 Seungbini",
+      "template": "9:16 Full Frame",
+      "category": "AI/테크",
+      "uploaded": "1081d ago",
+      "views": "126M",
+      "viewCount": 125599024,
+      "velocity": "+5.1K/h",
+      "saved": true,
+      "folder": "YouTube 수집",
+      "gradient": "linear-gradient(160deg,#10b981,#111827 58%,#050505)",
+      "hook": "YouTube Data API 수집: AI shorts tutorial 검색 결과에서 조회수, 길이, 게시일을 보강했습니다.",
+      "retention": "59%",
+      "saveRate": "2.3%",
+      "duration": "00:35",
+      "sourceUrl": "https://www.youtube.com/shorts/Eyd3w1OpCVA",
+      "thumbnailUrl": "https://i.ytimg.com/vi/Eyd3w1OpCVA/maxresdefault.jpg",
+      "publishedAt": "2023-06-16T09:55:00Z",
+      "lastSampledAt": "2026-06-01T03:39:06.927Z",
+      "ingestedAt": "2026-06-01T00:04:56.689Z",
+      "sourceKind": "youtube-api",
+      "language": "영어",
+      "viewsHistory": [
+        {
+          "at": "2026-06-01T00:04:56.689Z",
+          "views": 125596231
+        },
+        {
+          "at": "2026-06-01T00:20:07.970Z",
+          "views": 125597143
+        },
+        {
+          "at": "2026-06-01T03:39:03.984Z",
+          "views": 125598074
+        },
+        {
+          "at": "2026-06-01T03:39:06.927Z",
+          "views": 125599024
+        }
+      ]
+    },
+    {
+      "id": "yt-2VjtN73iJFE",
+      "rank": 20,
+      "title": "Tik Tok Drawing Transition Tutorial",
+      "channel": "Isabel Giannuzzi ",
+      "template": "9:16 Full Frame",
+      "category": "AI/테크",
+      "uploaded": "1632d ago",
+      "views": "125M",
+      "viewCount": 125052881,
+      "velocity": "+3.5K/h",
+      "saved": true,
+      "folder": "YouTube 수집",
+      "gradient": "linear-gradient(160deg,#06b6d4,#101820 58%,#050505)",
+      "hook": "YouTube Data API 수집: AI shorts tutorial 검색 결과에서 조회수, 길이, 게시일을 보강했습니다.",
+      "retention": "65%",
+      "saveRate": "1.8%",
+      "duration": "00:23",
+      "sourceUrl": "https://www.youtube.com/shorts/2VjtN73iJFE",
+      "thumbnailUrl": "https://i.ytimg.com/vi/2VjtN73iJFE/maxresdefault.jpg",
+      "publishedAt": "2021-12-11T15:04:50Z",
+      "lastSampledAt": "2026-06-01T03:39:06.927Z",
+      "ingestedAt": "2026-06-01T00:04:56.691Z",
+      "sourceKind": "youtube-api",
+      "language": "영어",
+      "viewsHistory": [
+        {
+          "at": "2026-06-01T00:04:56.691Z",
+          "views": 125051000
+        },
+        {
+          "at": "2026-06-01T00:20:07.970Z",
+          "views": 125051608
+        },
+        {
+          "at": "2026-06-01T03:39:03.984Z",
+          "views": 125052235
+        },
+        {
+          "at": "2026-06-01T03:39:06.927Z",
+          "views": 125052881
+        }
+      ]
+    },
+    {
+      "id": "yt-9sj4c_ue_d4",
+      "rank": 21,
+      "title": "I Made a Hyperrealistic Self Portrait Cake 😱",
+      "channel": "Sideserf Cake Studio",
+      "template": "9:16 Full Frame",
+      "category": "AI/테크",
+      "uploaded": "1486d ago",
+      "views": "45M",
+      "viewCount": 44977539,
+      "velocity": "+1.6K/h",
+      "saved": true,
+      "folder": "YouTube 수집",
+      "gradient": "linear-gradient(160deg,#7170ff,#111827 58%,#050505)",
+      "hook": "YouTube Data API 수집: AI shorts tutorial 검색 결과에서 조회수, 길이, 게시일을 보강했습니다.",
+      "retention": "58%",
+      "saveRate": "7.1%",
+      "duration": "00:47",
+      "sourceUrl": "https://www.youtube.com/shorts/9sj4c_ue_d4",
+      "thumbnailUrl": "https://i.ytimg.com/vi/9sj4c_ue_d4/maxresdefault.jpg",
+      "publishedAt": "2022-05-06T14:17:53Z",
+      "lastSampledAt": "2026-06-01T03:39:06.927Z",
+      "ingestedAt": "2026-06-01T00:04:56.691Z",
+      "sourceKind": "youtube-api",
+      "language": "영어",
+      "viewsHistory": [
+        {
+          "at": "2026-06-01T00:04:56.691Z",
+          "views": 44976741
+        },
+        {
+          "at": "2026-06-01T00:20:07.970Z",
+          "views": 44976988
+        },
+        {
+          "at": "2026-06-01T03:39:03.984Z",
+          "views": 44977254
+        },
+        {
+          "at": "2026-06-01T03:39:06.927Z",
+          "views": 44977539
+        }
+      ]
+    },
+    {
+      "id": "yt-cufXo9vKv6o",
+      "rank": 22,
+      "title": "Easiest Eyelashes Drawing Tutorial 👀😱 #shorts",
+      "channel": "Paintellectual PriyA",
+      "template": "9:16 Full Frame",
+      "category": "AI/테크",
+      "uploaded": "1078d ago",
+      "views": "44M",
+      "viewCount": 43986766,
+      "velocity": "+2.0K/h",
+      "saved": true,
+      "folder": "YouTube 수집",
+      "gradient": "linear-gradient(160deg,#10b981,#111827 58%,#050505)",
+      "hook": "YouTube Data API 수집: AI shorts tutorial 검색 결과에서 조회수, 길이, 게시일을 보강했습니다.",
+      "retention": "58%",
+      "saveRate": "3.3%",
+      "duration": "00:35",
+      "sourceUrl": "https://www.youtube.com/shorts/cufXo9vKv6o",
+      "thumbnailUrl": "https://i.ytimg.com/vi/cufXo9vKv6o/maxresdefault.jpg",
+      "publishedAt": "2023-06-19T09:44:42Z",
+      "lastSampledAt": "2026-06-01T03:39:06.927Z",
+      "ingestedAt": "2026-06-01T00:04:56.691Z",
+      "sourceKind": "youtube-api",
+      "language": "영어",
+      "viewsHistory": [
+        {
+          "at": "2026-06-01T00:04:56.691Z",
+          "views": 43985740
+        },
+        {
+          "at": "2026-06-01T00:20:07.970Z",
+          "views": 43986063
+        },
+        {
+          "at": "2026-06-01T03:39:03.984Z",
+          "views": 43986405
+        },
+        {
+          "at": "2026-06-01T03:39:06.927Z",
+          "views": 43986766
+        }
+      ]
+    },
+    {
+      "id": "yt-dHwXV7IwEQs",
+      "rank": 23,
+      "title": "How to do a TIKTOK Color Picking Trick in PROCREATE #Shorts",
+      "channel": "Art with Flo",
+      "template": "Tutorial Steps",
+      "category": "마케팅",
+      "uploaded": "1615d ago",
+      "views": "38M",
+      "viewCount": 37763715,
+      "velocity": "+1.3K/h",
+      "saved": true,
+      "folder": "YouTube 수집",
+      "gradient": "linear-gradient(160deg,#06b6d4,#101820 58%,#050505)",
+      "hook": "YouTube Data API 수집: shorts editing tips 검색 결과에서 조회수, 길이, 게시일을 보강했습니다.",
+      "retention": "58%",
+      "saveRate": "3.3%",
+      "duration": "00:54",
+      "sourceUrl": "https://www.youtube.com/shorts/dHwXV7IwEQs",
+      "thumbnailUrl": "https://i.ytimg.com/vi/dHwXV7IwEQs/maxresdefault.jpg",
+      "publishedAt": "2021-12-28T15:00:20Z",
+      "lastSampledAt": "2026-06-01T03:39:06.927Z",
+      "ingestedAt": "2026-06-01T00:04:56.692Z",
+      "sourceKind": "youtube-api",
+      "language": "영어",
+      "viewsHistory": [
+        {
+          "at": "2026-06-01T00:04:56.692Z",
+          "views": 37763088
+        },
+        {
+          "at": "2026-06-01T00:04:58.044Z",
+          "views": 37763088
+        },
+        {
+          "at": "2026-06-01T00:20:07.970Z",
+          "views": 37763278
+        },
+        {
+          "at": "2026-06-01T03:39:03.984Z",
+          "views": 37763487
+        },
+        {
+          "at": "2026-06-01T03:39:06.927Z",
+          "views": 37763715
+        }
+      ]
+    },
+    {
+      "id": "yt-tq_d1bwv0KE",
+      "rank": 24,
+      "title": "DIY viral Nano tape art 💙😋 #shorts",
+      "channel": "Aryan verma studios",
+      "template": "9:16 Full Frame",
+      "category": "마케팅",
+      "uploaded": "1165d ago",
+      "views": "65M",
+      "viewCount": 65162646,
+      "velocity": "+2.6K/h",
+      "saved": true,
+      "folder": "YouTube 수집",
+      "gradient": "linear-gradient(160deg,#f59e0b,#171717 58%,#050505)",
+      "hook": "YouTube Data API 수집: shorts editing tips 검색 결과에서 조회수, 길이, 게시일을 보강했습니다.",
+      "retention": "58%",
+      "saveRate": "2.6%",
+      "duration": "00:49",
+      "sourceUrl": "https://www.youtube.com/shorts/tq_d1bwv0KE",
+      "thumbnailUrl": "https://i.ytimg.com/vi/tq_d1bwv0KE/maxresdefault.jpg",
+      "publishedAt": "2023-03-23T13:02:01Z",
+      "lastSampledAt": "2026-06-01T03:39:06.927Z",
+      "ingestedAt": "2026-06-01T00:04:58.044Z",
+      "sourceKind": "youtube-api",
+      "language": "영어",
+      "viewsHistory": [
+        {
+          "at": "2026-06-01T00:04:58.044Z",
+          "views": 65161278
+        },
+        {
+          "at": "2026-06-01T00:20:07.970Z",
+          "views": 65161715
+        },
+        {
+          "at": "2026-06-01T03:39:03.984Z",
+          "views": 65162171
+        },
+        {
+          "at": "2026-06-01T03:39:06.927Z",
+          "views": 65162646
+        }
+      ]
+    },
+    {
+      "id": "yt-7uRX7jYp1ug",
+      "rank": 25,
+      "title": "Crazy Low Angle Outdoor Transition With Phone 🔥 #shorts",
+      "channel": "Ur SmartMaker Shorts",
+      "template": "9:16 Full Frame",
+      "category": "마케팅",
+      "uploaded": "1873d ago",
+      "views": "55M",
+      "viewCount": 54848920,
+      "velocity": "+1.5K/h",
+      "saved": true,
+      "folder": "YouTube 수집",
+      "gradient": "linear-gradient(160deg,#10b981,#111827 58%,#050505)",
+      "hook": "YouTube Data API 수집: shorts editing tips 검색 결과에서 조회수, 길이, 게시일을 보강했습니다.",
+      "retention": "58%",
+      "saveRate": "4.2%",
+      "duration": "00:33",
+      "sourceUrl": "https://www.youtube.com/shorts/7uRX7jYp1ug",
+      "thumbnailUrl": "https://i.ytimg.com/vi/7uRX7jYp1ug/maxresdefault.jpg",
+      "publishedAt": "2021-04-15T11:20:42Z",
+      "lastSampledAt": "2026-06-01T03:39:06.927Z",
+      "ingestedAt": "2026-06-01T00:04:58.044Z",
+      "sourceKind": "youtube-api",
+      "language": "영어",
+      "viewsHistory": [
+        {
+          "at": "2026-06-01T00:04:58.044Z",
+          "views": 54848179
+        },
+        {
+          "at": "2026-06-01T00:20:07.970Z",
+          "views": 54848407
+        },
+        {
+          "at": "2026-06-01T03:39:03.984Z",
+          "views": 54848654
+        },
+        {
+          "at": "2026-06-01T03:39:06.927Z",
+          "views": 54848920
+        }
+      ]
+    },
+    {
+      "id": "yt-H-9qGWrW83M",
+      "rank": 26,
+      "title": "EASY PHOTO IDEA with EPIC RESULTS! 💦🤯 #photography #shorts",
+      "channel": "Kyle Nutt",
+      "template": "9:16 Full Frame",
+      "category": "마케팅",
+      "uploaded": "1609d ago",
+      "views": "31M",
+      "viewCount": 31085566,
+      "velocity": "+1.3K/h",
+      "saved": true,
+      "folder": "YouTube 수집",
+      "gradient": "linear-gradient(160deg,#10b981,#111827 58%,#050505)",
+      "hook": "YouTube Data API 수집: shorts editing tips 검색 결과에서 조회수, 길이, 게시일을 보강했습니다.",
+      "retention": "64%",
+      "saveRate": "3.9%",
+      "duration": "00:21",
+      "sourceUrl": "https://www.youtube.com/shorts/H-9qGWrW83M",
+      "thumbnailUrl": "https://i.ytimg.com/vi/H-9qGWrW83M/maxresdefault.jpg",
+      "publishedAt": "2022-01-03T15:17:19Z",
+      "lastSampledAt": "2026-06-01T03:39:06.927Z",
+      "ingestedAt": "2026-06-01T00:04:58.044Z",
+      "sourceKind": "youtube-api",
+      "language": "영어",
+      "viewsHistory": [
+        {
+          "at": "2026-06-01T00:04:58.044Z",
+          "views": 31084939
+        },
+        {
+          "at": "2026-06-01T00:20:07.970Z",
+          "views": 31085129
+        },
+        {
+          "at": "2026-06-01T03:39:03.984Z",
+          "views": 31085338
+        },
+        {
+          "at": "2026-06-01T03:39:06.927Z",
+          "views": 31085566
+        }
+      ]
+    },
+    {
+      "id": "yt-koVOfP1ydYo",
+      "rank": 27,
+      "title": "Crazy Outdoor Transition Ideas With Phone 🔥 #shorts",
+      "channel": "Ur SmartMaker Shorts",
+      "template": "9:16 Full Frame",
+      "category": "마케팅",
+      "uploaded": "1834d ago",
+      "views": "31M",
+      "viewCount": 30852599,
+      "velocity": "+1.3K/h",
+      "saved": true,
+      "folder": "YouTube 수집",
+      "gradient": "linear-gradient(160deg,#7170ff,#111827 58%,#050505)",
+      "hook": "YouTube Data API 수집: shorts editing tips 검색 결과에서 조회수, 길이, 게시일을 보강했습니다.",
+      "retention": "58%",
+      "saveRate": "3.5%",
+      "duration": "00:32",
+      "sourceUrl": "https://www.youtube.com/shorts/koVOfP1ydYo",
+      "thumbnailUrl": "https://i.ytimg.com/vi/koVOfP1ydYo/maxresdefault.jpg",
+      "publishedAt": "2021-05-23T12:50:23Z",
+      "lastSampledAt": "2026-06-01T03:39:06.927Z",
+      "ingestedAt": "2026-06-01T00:04:58.044Z",
+      "sourceKind": "youtube-api",
+      "language": "영어",
+      "viewsHistory": [
+        {
+          "at": "2026-06-01T00:04:58.044Z",
+          "views": 30851972
+        },
+        {
+          "at": "2026-06-01T00:20:07.970Z",
+          "views": 30852162
+        },
+        {
+          "at": "2026-06-01T03:39:03.984Z",
+          "views": 30852371
+        },
+        {
+          "at": "2026-06-01T03:39:06.927Z",
+          "views": 30852599
+        }
+      ]
+    },
+    {
+      "id": "yt-nM3vZ8vMsag",
+      "rank": 28,
+      "title": "When you don't share cheese spaghetti tteokbokki",
+      "channel": "Mykoreandic",
+      "template": "9:16 Full Frame",
+      "category": "푸드",
+      "uploaded": "920d ago",
+      "views": "327M",
+      "viewCount": 326878514,
+      "velocity": "+15.1K/h",
+      "saved": true,
+      "folder": "YouTube 수집",
+      "gradient": "linear-gradient(160deg,#ec4899,#121212 58%,#050505)",
+      "hook": "YouTube Data API 수집: Korean food shorts 검색 결과에서 조회수, 길이, 게시일을 보강했습니다.",
+      "retention": "60%",
+      "saveRate": "2.2%",
+      "duration": "01:00",
+      "sourceUrl": "https://www.youtube.com/shorts/nM3vZ8vMsag",
+      "thumbnailUrl": "https://i.ytimg.com/vi/nM3vZ8vMsag/maxresdefault.jpg",
+      "publishedAt": "2023-11-23T23:31:09Z",
+      "lastSampledAt": "2026-06-01T03:39:06.927Z",
+      "ingestedAt": "2026-06-01T00:05:06.659Z",
+      "sourceKind": "youtube-api",
+      "language": "영어",
+      "viewsHistory": [
+        {
+          "at": "2026-06-01T00:05:06.659Z",
+          "views": 326870021
+        },
+        {
+          "at": "2026-06-01T00:20:07.970Z",
+          "views": 326872833
+        },
+        {
+          "at": "2026-06-01T03:39:03.984Z",
+          "views": 326875664
+        },
+        {
+          "at": "2026-06-01T03:39:06.927Z",
+          "views": 326878514
+        }
+      ]
+    },
+    {
+      "id": "yt-dOOOeyBAQxQ",
+      "rank": 29,
+      "title": "ultimate cheetos grilled cheese #shorts",
+      "channel": "Zach Choi",
+      "template": "9:16 Full Frame",
+      "category": "푸드",
+      "uploaded": "1325d ago",
+      "views": "200M",
+      "viewCount": 199864707,
+      "velocity": "+6.6K/h",
+      "saved": true,
+      "folder": "YouTube 수집",
+      "gradient": "linear-gradient(160deg,#f59e0b,#171717 58%,#050505)",
+      "hook": "YouTube Data API 수집: Korean food shorts 검색 결과에서 조회수, 길이, 게시일을 보강했습니다.",
+      "retention": "59%",
+      "saveRate": "4.6%",
+      "duration": "00:31",
+      "sourceUrl": "https://www.youtube.com/shorts/dOOOeyBAQxQ",
+      "thumbnailUrl": "https://i.ytimg.com/vi/dOOOeyBAQxQ/maxresdefault.jpg",
+      "publishedAt": "2022-10-15T01:30:11Z",
+      "lastSampledAt": "2026-06-01T03:39:06.927Z",
+      "ingestedAt": "2026-06-01T00:05:06.659Z",
+      "sourceKind": "youtube-api",
+      "language": "영어",
+      "viewsHistory": [
+        {
+          "at": "2026-06-01T00:05:06.659Z",
+          "views": 199861059
+        },
+        {
+          "at": "2026-06-01T00:20:07.970Z",
+          "views": 199862256
+        },
+        {
+          "at": "2026-06-01T03:39:03.984Z",
+          "views": 199863472
+        },
+        {
+          "at": "2026-06-01T03:39:06.927Z",
+          "views": 199864707
+        }
+      ]
+    },
+    {
+      "id": "yt-RbRYV1H8og0",
+      "rank": 30,
+      "title": "(Spicy Food Eating) - Fresh Tofu with Chillies - mukbang ASMR | Sisters Eating #Shorts",
+      "channel": "Spicy Momo",
+      "template": "9:16 Full Frame",
+      "category": "푸드",
+      "uploaded": "2028d ago",
+      "views": "165M",
+      "viewCount": 165406368,
+      "velocity": "+3.7K/h",
+      "saved": true,
+      "folder": "YouTube 수집",
+      "gradient": "linear-gradient(160deg,#7170ff,#111827 58%,#050505)",
+      "hook": "YouTube Data API 수집: Korean food shorts 검색 결과에서 조회수, 길이, 게시일을 보강했습니다.",
+      "retention": "65%",
+      "saveRate": "1.8%",
+      "duration": "00:22",
+      "sourceUrl": "https://www.youtube.com/shorts/RbRYV1H8og0",
+      "thumbnailUrl": "https://i.ytimg.com/vi/RbRYV1H8og0/hqdefault.jpg",
+      "publishedAt": "2020-11-11T03:55:54Z",
+      "lastSampledAt": "2026-06-01T03:39:06.927Z",
+      "ingestedAt": "2026-06-01T00:05:06.659Z",
+      "sourceKind": "youtube-api",
+      "language": "영어",
+      "viewsHistory": [
+        {
+          "at": "2026-06-01T00:05:06.659Z",
+          "views": 165404373
+        },
+        {
+          "at": "2026-06-01T00:20:07.970Z",
+          "views": 165405019
+        },
+        {
+          "at": "2026-06-01T03:39:03.984Z",
+          "views": 165405684
+        },
+        {
+          "at": "2026-06-01T03:39:06.927Z",
+          "views": 165406368
+        }
+      ]
+    },
+    {
+      "id": "yt-kpYZOpXH-bs",
+      "rank": 31,
+      "title": "when your girl's food starts tasting like your mom's 😂 #couple #shorts",
+      "channel": "Andy and Michelle",
+      "template": "9:16 Full Frame",
+      "category": "푸드",
+      "uploaded": "1364d ago",
+      "views": "158M",
+      "viewCount": 158183282,
+      "velocity": "+5.1K/h",
+      "saved": true,
+      "folder": "YouTube 수집",
+      "gradient": "linear-gradient(160deg,#06b6d4,#101820 58%,#050505)",
+      "hook": "YouTube Data API 수집: Korean food shorts 검색 결과에서 조회수, 길이, 게시일을 보강했습니다.",
+      "retention": "59%",
+      "saveRate": "4.2%",
+      "duration": "00:37",
+      "sourceUrl": "https://www.youtube.com/shorts/kpYZOpXH-bs",
+      "thumbnailUrl": "https://i.ytimg.com/vi/kpYZOpXH-bs/maxresdefault.jpg",
+      "publishedAt": "2022-09-06T00:49:29Z",
+      "lastSampledAt": "2026-06-01T03:39:06.927Z",
+      "ingestedAt": "2026-06-01T00:05:06.659Z",
+      "sourceKind": "youtube-api",
+      "language": "영어",
+      "viewsHistory": [
+        {
+          "at": "2026-06-01T00:05:06.659Z",
+          "views": 158180489
+        },
+        {
+          "at": "2026-06-01T00:20:07.970Z",
+          "views": 158181401
+        },
+        {
+          "at": "2026-06-01T03:39:03.984Z",
+          "views": 158182332
+        },
+        {
+          "at": "2026-06-01T03:39:06.927Z",
+          "views": 158183282
+        }
+      ]
+    },
+    {
+      "id": "yt-s5adV2Jtnsw",
+      "rank": 32,
+      "title": "WORLD’S SPICIEST KOREAN NOODLES CHALLENGE😱 30 PACKETS OF KOREAN NOODLES🔥 #shorts #foodie #spicy",
+      "channel": "Wake'N'Bite",
+      "template": "Ranking Hook",
+      "category": "푸드",
+      "uploaded": "864d ago",
+      "views": "144M",
+      "viewCount": 144490290,
+      "velocity": "+7.3K/h",
+      "saved": true,
+      "folder": "YouTube 수집",
+      "gradient": "linear-gradient(160deg,#10b981,#111827 58%,#050505)",
+      "hook": "YouTube Data API 수집: Korean food shorts 검색 결과에서 조회수, 길이, 게시일을 보강했습니다.",
+      "retention": "65%",
+      "saveRate": "1.8%",
+      "duration": "00:21",
+      "sourceUrl": "https://www.youtube.com/shorts/s5adV2Jtnsw",
+      "thumbnailUrl": "https://i.ytimg.com/vi/s5adV2Jtnsw/maxresdefault.jpg",
+      "publishedAt": "2024-01-19T05:30:13Z",
+      "lastSampledAt": "2026-06-01T03:39:06.927Z",
+      "ingestedAt": "2026-06-01T00:05:06.659Z",
+      "sourceKind": "youtube-api",
+      "language": "영어",
+      "viewsHistory": [
+        {
+          "at": "2026-06-01T00:05:06.659Z",
+          "views": 144486243
+        },
+        {
+          "at": "2026-06-01T00:20:07.970Z",
+          "views": 144487573
+        },
+        {
+          "at": "2026-06-01T03:39:03.984Z",
+          "views": 144488922
+        },
+        {
+          "at": "2026-06-01T03:39:06.927Z",
+          "views": 144490290
+        }
+      ]
+    }
+  ],
+  "templates": [
+    {
+      "name": "Ranking Hook",
+      "type": "랭킹/리스트형",
+      "views": "42.8M",
+      "delta": "+22.4%",
+      "count": 214,
+      "tone": "cyan",
+      "why": "숫자·순위·비교 후킹이 가장 빠르게 확산",
+      "bestFor": "정보형, 교육형, 큐레이션"
+    },
+    {
+      "name": "9:16 Full Frame",
+      "type": "몰입형 풀프레임",
+      "views": "38.4M",
+      "delta": "+18.2%",
+      "count": 148,
+      "tone": "violet",
+      "why": "작업 과정·현장감·스크린 기록형에 강함",
+      "bestFor": "AI 제작, 튜토리얼, 과정 공개"
+    },
+    {
+      "name": "Product Demo",
+      "type": "제품/커머스 데모",
+      "views": "31.2M",
+      "delta": "+16.9%",
+      "count": 132,
+      "tone": "green",
+      "why": "문제→시연→결과 전환이 구매 의도와 연결",
+      "bestFor": "커머스, 뷰티, 푸드, 앱"
+    },
+    {
+      "name": "Caption Meme",
+      "type": "자막/밈 포맷",
+      "views": "27.6M",
+      "delta": "+14.1%",
+      "count": 187,
+      "tone": "blue",
+      "why": "짧은 문장·공감 포인트로 저장률이 높음",
+      "bestFor": "엔터, 라이프스타일, SNS 밈"
+    },
+    {
+      "name": "Before / After",
+      "type": "전후 비교형",
+      "views": "24.1M",
+      "delta": "+12.4%",
+      "count": 103,
+      "tone": "green",
+      "why": "변화가 한눈에 보여 retention이 안정적",
+      "bestFor": "디자인, 운동, 뷰티, 생산성"
+    },
+    {
+      "name": "Street Interview",
+      "type": "거리 인터뷰형",
+      "views": "21.8M",
+      "delta": "+11.0%",
+      "count": 96,
+      "tone": "cyan",
+      "why": "현장성 + 질문형 훅으로 스크롤 정지 유도",
+      "bestFor": "패션, 엔터, 교육, 리서치"
+    },
+    {
+      "name": "Tutorial Steps",
+      "type": "User imported pattern",
+      "views": "0",
+      "delta": "new",
+      "count": 1,
+      "tone": "cyan",
+      "why": "사용자가 직접 추가한 레퍼런스에서 감지한 템플릿입니다.",
+      "bestFor": "수동 리서치 레퍼런스 정리"
+    }
+  ],
+  "folders": [
+    {
+      "name": "랭킹형 후킹",
+      "color": "#7170ff",
+      "desc": "숫자·순위·비교 구조",
+      "count": 0
+    },
+    {
+      "name": "커머스 레퍼런스",
+      "color": "#10b981",
+      "desc": "제품 데모와 구매 전환",
+      "count": 1
+    },
+    {
+      "name": "다운로드 후보",
+      "color": "#06b6d4",
+      "desc": "구간 다운로드할 원본",
+      "count": 2
+    },
+    {
+      "name": "자막/캡션 실험",
+      "color": "#f59e0b",
+      "desc": "자막·밈·카피 패턴",
+      "count": 0
+    },
+    {
+      "name": "Smoke Test Folder",
+      "color": "#ec4899",
+      "desc": "사용자가 추가한 로컬 폴더",
+      "count": 1
+    },
+    {
+      "name": "YouTube 수집",
+      "color": "#38bdf8",
+      "desc": "사용자가 추가한 로컬 폴더",
+      "count": 22
+    }
+  ],
+  "downloads": [
+    {
+      "id": "clip-vid-002",
+      "videoId": "vid-002",
+      "title": "3초 안에 끝나는 노트 정리법",
+      "startSec": 2,
+      "endSec": 12,
+      "status": "queued",
+      "format": "mp4",
+      "aspectRatio": "9:16",
+      "createdAt": "2026-05-31T16:27:54.091Z",
+      "policyNote": "로컬 큐에만 등록됩니다. 원본 재배포 전 권리와 플랫폼 정책을 확인하세요."
+    },
+    {
+      "id": "clip-vid-006",
+      "videoId": "vid-006",
+      "title": "올리브영 세일템 5개만 비교",
+      "startSec": 4,
+      "endSec": 22,
+      "status": "queued",
+      "format": "mp4",
+      "aspectRatio": "9:16",
+      "createdAt": "2026-05-31T16:22:40.964Z",
+      "policyNote": "로컬 큐에만 등록됩니다. 원본 재배포 전 권리와 플랫폼 정책을 확인하세요."
+    },
+    {
+      "id": "clip-vid-001",
+      "videoId": "vid-001",
+      "title": "편의점 신상 조합이 터진 이유",
+      "startSec": 2,
+      "endSec": 12,
+      "status": "queued",
+      "format": "mp4",
+      "aspectRatio": "9:16",
+      "createdAt": "2026-05-31T16:19:30.086Z",
+      "policyNote": "로컬 큐에만 등록됩니다. 원본 재배포 전 권리와 플랫폼 정책을 확인하세요."
+    },
+    {
+      "id": "clip-vid-005",
+      "videoId": "vid-005",
+      "title": "AI로 1분 광고 만드는 실제 과정",
+      "startSec": 3,
+      "endSec": 31,
+      "status": "queued",
+      "format": "mp4",
+      "aspectRatio": "9:16",
+      "createdAt": "2026-06-01T00:00:00.000Z",
+      "policyNote": "로컬 큐에만 등록됩니다. 원본 재배포 전 권리와 플랫폼 정책을 확인하세요."
+    }
+  ],
+  "matchReports": [
+    {
+      "id": "match-mpu09mnd-7gr",
+      "sourceTitle": "A",
+      "remakeTitle": "B",
+      "matchScore": "42%",
+      "risk": "Low",
+      "signals": [
+        {
+          "label": "텍스트/키워드",
+          "score": "50%",
+          "note": "주요 후킹 문장은 다르게 구성되어 있습니다."
+        },
+        {
+          "label": "사운드 핑거프린트",
+          "score": "26%",
+          "note": "실제 음원 fingerprint 없이 메타데이터 기반으로 보수 산정했습니다."
+        },
+        {
+          "label": "픽셀/프레임",
+          "score": "20%",
+          "note": "시각 장면과 프레임 반복을 별도 신호로 분리한 로컬 시뮬레이션입니다."
+        },
+        {
+          "label": "구조/전개",
+          "score": "35%",
+          "note": "컷 길이, 훅, 증거, CTA 순서를 기준으로 계산했습니다."
+        }
+      ],
+      "policyChecks": [
+        {
+          "name": "원본 출처 표기",
+          "status": "통과",
+          "desc": "외부 게시 전 출처와 사용 권한을 확인하세요."
+        },
+        {
+          "name": "동일 장면 재사용",
+          "status": "통과",
+          "desc": "시각 구조가 가까울수록 컷/대사/자막 재구성이 필요합니다."
+        },
+        {
+          "name": "플랫폼 정책",
+          "status": "주의",
+          "desc": "자동 판정은 참고용이며 최종 업로드 전 사람이 검토해야 합니다."
+        }
+      ],
+      "createdAt": "2026-05-31T16:40:03.049Z"
+    },
+    {
+      "id": "match-mpu01syi-ye",
+      "sourceTitle": "편의점 신상 조합이 터진 이유",
+      "remakeTitle": "3초 안에 끝나는 노트 정리법",
+      "sourceUrl": "https://youtube.com/shorts/smoke-test",
+      "matchScore": "65%",
+      "risk": "Medium",
+      "signals": [
+        {
+          "label": "텍스트/키워드",
+          "score": "73%",
+          "note": "주요 후킹 문장은 다르게 구성되어 있습니다."
+        },
+        {
+          "label": "사운드 핑거프린트",
+          "score": "51%",
+          "note": "실제 음원 fingerprint 없이 메타데이터 기반으로 보수 산정했습니다."
+        },
+        {
+          "label": "픽셀/프레임",
+          "score": "43%",
+          "note": "기존 리포트를 4-signal schema로 보정한 프레임 유사도 신호입니다."
+        },
+        {
+          "label": "구조/전개",
+          "score": "73%",
+          "note": "주요 후킹 문장은 다르게 구성되어 있습니다."
+        }
+      ],
+      "policyChecks": [
+        {
+          "name": "원본 출처 표기",
+          "status": "통과",
+          "desc": "외부 게시 전 출처와 사용 권한을 확인하세요."
+        },
+        {
+          "name": "동일 장면 재사용",
+          "status": "주의",
+          "desc": "시각 구조가 가까울수록 컷/대사/자막 재구성이 필요합니다."
+        },
+        {
+          "name": "플랫폼 정책",
+          "status": "주의",
+          "desc": "자동 판정은 참고용이며 최종 업로드 전 사람이 검토해야 합니다."
+        }
+      ],
+      "createdAt": "2026-05-31T16:33:57.978Z"
+    },
+    {
+      "id": "match-mpu00hib-ye",
+      "sourceTitle": "편의점 신상 조합이 터진 이유",
+      "remakeTitle": "3초 안에 끝나는 노트 정리법",
+      "sourceUrl": "https://youtube.com/shorts/smoke-test",
+      "matchScore": "65%",
+      "risk": "Medium",
+      "signals": [
+        {
+          "label": "텍스트/키워드",
+          "score": "73%",
+          "note": "주요 후킹 문장은 다르게 구성되어 있습니다."
+        },
+        {
+          "label": "사운드 핑거프린트",
+          "score": "51%",
+          "note": "실제 음원 fingerprint 없이 메타데이터 기반으로 보수 산정했습니다."
+        },
+        {
+          "label": "픽셀/프레임",
+          "score": "43%",
+          "note": "기존 리포트를 4-signal schema로 보정한 프레임 유사도 신호입니다."
+        },
+        {
+          "label": "구조/전개",
+          "score": "73%",
+          "note": "주요 후킹 문장은 다르게 구성되어 있습니다."
+        }
+      ],
+      "policyChecks": [
+        {
+          "name": "원본 출처 표기",
+          "status": "통과",
+          "desc": "외부 게시 전 출처와 사용 권한을 확인하세요."
+        },
+        {
+          "name": "동일 장면 재사용",
+          "status": "주의",
+          "desc": "시각 구조가 가까울수록 컷/대사/자막 재구성이 필요합니다."
+        },
+        {
+          "name": "플랫폼 정책",
+          "status": "주의",
+          "desc": "자동 판정은 참고용이며 최종 업로드 전 사람이 검토해야 합니다."
+        }
+      ],
+      "createdAt": "2026-05-31T16:32:56.483Z"
+    },
+    {
+      "id": "match-mptzvb4q-ye",
+      "sourceTitle": "편의점 신상 조합이 터진 이유",
+      "remakeTitle": "3초 안에 끝나는 노트 정리법",
+      "sourceUrl": "https://youtube.com/shorts/smoke-test",
+      "matchScore": "65%",
+      "risk": "Medium",
+      "signals": [
+        {
+          "label": "텍스트/키워드",
+          "score": "73%",
+          "note": "주요 후킹 문장은 다르게 구성되어 있습니다."
+        },
+        {
+          "label": "사운드 핑거프린트",
+          "score": "51%",
+          "note": "실제 음원 fingerprint 없이 메타데이터 기반으로 보수 산정했습니다."
+        },
+        {
+          "label": "픽셀/프레임",
+          "score": "43%",
+          "note": "기존 리포트를 4-signal schema로 보정한 프레임 유사도 신호입니다."
+        },
+        {
+          "label": "구조/전개",
+          "score": "73%",
+          "note": "주요 후킹 문장은 다르게 구성되어 있습니다."
+        }
+      ],
+      "policyChecks": [
+        {
+          "name": "원본 출처 표기",
+          "status": "통과",
+          "desc": "외부 게시 전 출처와 사용 권한을 확인하세요."
+        },
+        {
+          "name": "동일 장면 재사용",
+          "status": "주의",
+          "desc": "시각 구조가 가까울수록 컷/대사/자막 재구성이 필요합니다."
+        },
+        {
+          "name": "플랫폼 정책",
+          "status": "주의",
+          "desc": "자동 판정은 참고용이며 최종 업로드 전 사람이 검토해야 합니다."
+        }
+      ],
+      "createdAt": "2026-05-31T16:28:54.938Z"
+    },
+    {
+      "id": "match-mptzuykm-ye",
+      "sourceTitle": "편의점 신상 조합이 터진 이유",
+      "remakeTitle": "3초 안에 끝나는 노트 정리법",
+      "sourceUrl": "https://youtube.com/shorts/smoke-test",
+      "matchScore": "65%",
+      "risk": "Medium",
+      "signals": [
+        {
+          "label": "텍스트/키워드",
+          "score": "73%",
+          "note": "주요 후킹 문장은 다르게 구성되어 있습니다."
+        },
+        {
+          "label": "사운드 핑거프린트",
+          "score": "51%",
+          "note": "실제 음원 fingerprint 없이 메타데이터 기반으로 보수 산정했습니다."
+        },
+        {
+          "label": "픽셀/프레임",
+          "score": "43%",
+          "note": "기존 리포트를 4-signal schema로 보정한 프레임 유사도 신호입니다."
+        },
+        {
+          "label": "구조/전개",
+          "score": "73%",
+          "note": "주요 후킹 문장은 다르게 구성되어 있습니다."
+        }
+      ],
+      "policyChecks": [
+        {
+          "name": "원본 출처 표기",
+          "status": "통과",
+          "desc": "외부 게시 전 출처와 사용 권한을 확인하세요."
+        },
+        {
+          "name": "동일 장면 재사용",
+          "status": "주의",
+          "desc": "시각 구조가 가까울수록 컷/대사/자막 재구성이 필요합니다."
+        },
+        {
+          "name": "플랫폼 정책",
+          "status": "주의",
+          "desc": "자동 판정은 참고용이며 최종 업로드 전 사람이 검토해야 합니다."
+        }
+      ],
+      "createdAt": "2026-05-31T16:28:38.662Z"
+    },
+    {
+      "id": "match-mptzun3h-ye",
+      "sourceTitle": "편의점 신상 조합이 터진 이유",
+      "remakeTitle": "3초 안에 끝나는 노트 정리법",
+      "sourceUrl": "https://youtube.com/shorts/smoke-test",
+      "matchScore": "65%",
+      "risk": "Medium",
+      "signals": [
+        {
+          "label": "텍스트/키워드",
+          "score": "73%",
+          "note": "주요 후킹 문장은 다르게 구성되어 있습니다."
+        },
+        {
+          "label": "사운드 핑거프린트",
+          "score": "51%",
+          "note": "실제 음원 fingerprint 없이 메타데이터 기반으로 보수 산정했습니다."
+        },
+        {
+          "label": "픽셀/프레임",
+          "score": "43%",
+          "note": "기존 리포트를 4-signal schema로 보정한 프레임 유사도 신호입니다."
+        },
+        {
+          "label": "구조/전개",
+          "score": "73%",
+          "note": "주요 후킹 문장은 다르게 구성되어 있습니다."
+        }
+      ],
+      "policyChecks": [
+        {
+          "name": "원본 출처 표기",
+          "status": "통과",
+          "desc": "외부 게시 전 출처와 사용 권한을 확인하세요."
+        },
+        {
+          "name": "동일 장면 재사용",
+          "status": "주의",
+          "desc": "시각 구조가 가까울수록 컷/대사/자막 재구성이 필요합니다."
+        },
+        {
+          "name": "플랫폼 정책",
+          "status": "주의",
+          "desc": "자동 판정은 참고용이며 최종 업로드 전 사람이 검토해야 합니다."
+        }
+      ],
+      "createdAt": "2026-05-31T16:28:23.789Z"
+    },
+    {
+      "id": "match-mptzuhza-ye",
+      "sourceTitle": "편의점 신상 조합이 터진 이유",
+      "remakeTitle": "3초 안에 끝나는 노트 정리법",
+      "sourceUrl": "https://youtube.com/shorts/smoke-test",
+      "matchScore": "65%",
+      "risk": "Medium",
+      "signals": [
+        {
+          "label": "텍스트/키워드",
+          "score": "73%",
+          "note": "주요 후킹 문장은 다르게 구성되어 있습니다."
+        },
+        {
+          "label": "사운드 핑거프린트",
+          "score": "51%",
+          "note": "실제 음원 fingerprint 없이 메타데이터 기반으로 보수 산정했습니다."
+        },
+        {
+          "label": "픽셀/프레임",
+          "score": "43%",
+          "note": "기존 리포트를 4-signal schema로 보정한 프레임 유사도 신호입니다."
+        },
+        {
+          "label": "구조/전개",
+          "score": "73%",
+          "note": "주요 후킹 문장은 다르게 구성되어 있습니다."
+        }
+      ],
+      "policyChecks": [
+        {
+          "name": "원본 출처 표기",
+          "status": "통과",
+          "desc": "외부 게시 전 출처와 사용 권한을 확인하세요."
+        },
+        {
+          "name": "동일 장면 재사용",
+          "status": "주의",
+          "desc": "시각 구조가 가까울수록 컷/대사/자막 재구성이 필요합니다."
+        },
+        {
+          "name": "플랫폼 정책",
+          "status": "주의",
+          "desc": "자동 판정은 참고용이며 최종 업로드 전 사람이 검토해야 합니다."
+        }
+      ],
+      "createdAt": "2026-05-31T16:28:17.158Z"
+    },
+    {
+      "id": "match-mptzu07d-ye",
+      "sourceTitle": "편의점 신상 조합이 터진 이유",
+      "remakeTitle": "3초 안에 끝나는 노트 정리법",
+      "sourceUrl": "https://youtube.com/shorts/smoke-test",
+      "matchScore": "65%",
+      "risk": "Medium",
+      "signals": [
+        {
+          "label": "텍스트/키워드",
+          "score": "73%",
+          "note": "주요 후킹 문장은 다르게 구성되어 있습니다."
+        },
+        {
+          "label": "사운드 핑거프린트",
+          "score": "51%",
+          "note": "실제 음원 fingerprint 없이 메타데이터 기반으로 보수 산정했습니다."
+        },
+        {
+          "label": "픽셀/프레임",
+          "score": "43%",
+          "note": "기존 리포트를 4-signal schema로 보정한 프레임 유사도 신호입니다."
+        },
+        {
+          "label": "구조/전개",
+          "score": "73%",
+          "note": "주요 후킹 문장은 다르게 구성되어 있습니다."
+        }
+      ],
+      "policyChecks": [
+        {
+          "name": "원본 출처 표기",
+          "status": "통과",
+          "desc": "외부 게시 전 출처와 사용 권한을 확인하세요."
+        },
+        {
+          "name": "동일 장면 재사용",
+          "status": "주의",
+          "desc": "시각 구조가 가까울수록 컷/대사/자막 재구성이 필요합니다."
+        },
+        {
+          "name": "플랫폼 정책",
+          "status": "주의",
+          "desc": "자동 판정은 참고용이며 최종 업로드 전 사람이 검토해야 합니다."
+        }
+      ],
+      "createdAt": "2026-05-31T16:27:54.121Z"
+    },
+    {
+      "id": "match-mptznaln-46a",
+      "sourceTitle": "편의점 신상 조합이 터진 이유",
+      "remakeTitle": "편의점 조합 리메이크 초안",
+      "matchScore": "52%",
+      "risk": "Low",
+      "signals": [
+        {
+          "label": "텍스트/키워드",
+          "score": "60%",
+          "note": "주요 후킹 문장은 다르게 구성되어 있습니다."
+        },
+        {
+          "label": "사운드 핑거프린트",
+          "score": "38%",
+          "note": "실제 음원 fingerprint 없이 메타데이터 기반으로 보수 산정했습니다."
+        },
+        {
+          "label": "픽셀/프레임",
+          "score": "30%",
+          "note": "기존 리포트를 4-signal schema로 보정한 프레임 유사도 신호입니다."
+        },
+        {
+          "label": "구조/전개",
+          "score": "60%",
+          "note": "주요 후킹 문장은 다르게 구성되어 있습니다."
+        }
+      ],
+      "policyChecks": [
+        {
+          "name": "원본 출처 표기",
+          "status": "통과",
+          "desc": "외부 게시 전 출처와 사용 권한을 확인하세요."
+        },
+        {
+          "name": "동일 장면 재사용",
+          "status": "통과",
+          "desc": "시각 구조가 가까울수록 컷/대사/자막 재구성이 필요합니다."
+        },
+        {
+          "name": "플랫폼 정책",
+          "status": "주의",
+          "desc": "자동 판정은 참고용이며 최종 업로드 전 사람이 검토해야 합니다."
+        }
+      ],
+      "createdAt": "2026-05-31T16:22:41.003Z"
+    },
+    {
+      "id": "match-mptzj7ef-46a",
+      "sourceTitle": "편의점 신상 조합이 터진 이유",
+      "remakeTitle": "편의점 조합 리메이크 초안",
+      "matchScore": "52%",
+      "risk": "Low",
+      "signals": [
+        {
+          "label": "텍스트/키워드",
+          "score": "60%",
+          "note": "주요 후킹 문장은 다르게 구성되어 있습니다."
+        },
+        {
+          "label": "사운드 핑거프린트",
+          "score": "38%",
+          "note": "실제 음원 fingerprint 없이 메타데이터 기반으로 보수 산정했습니다."
+        },
+        {
+          "label": "픽셀/프레임",
+          "score": "30%",
+          "note": "기존 리포트를 4-signal schema로 보정한 프레임 유사도 신호입니다."
+        },
+        {
+          "label": "구조/전개",
+          "score": "60%",
+          "note": "주요 후킹 문장은 다르게 구성되어 있습니다."
+        }
+      ],
+      "policyChecks": [
+        {
+          "name": "원본 출처 표기",
+          "status": "통과",
+          "desc": "외부 게시 전 출처와 사용 권한을 확인하세요."
+        },
+        {
+          "name": "동일 장면 재사용",
+          "status": "통과",
+          "desc": "시각 구조가 가까울수록 컷/대사/자막 재구성이 필요합니다."
+        },
+        {
+          "name": "플랫폼 정책",
+          "status": "주의",
+          "desc": "자동 판정은 참고용이며 최종 업로드 전 사람이 검토해야 합니다."
+        }
+      ],
+      "createdAt": "2026-05-31T16:19:30.231Z"
+    }
+  ],
+  "lastSyncedAt": "2026-06-01T03:39:06.927Z"
+}

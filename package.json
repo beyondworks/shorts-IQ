@@ -1,0 +1,28 @@
+{
+  "name": "shorts-intelligence-dashboard",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --hostname 127.0.0.1 --port 8791",
+    "build": "next build",
+    "start": "next start --hostname 127.0.0.1 --port 8791",
+    "lint": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "test": "pnpm build && SMOKE_SERVER_MODE=start node scripts/smoke-test.mjs",
+    "test:browser": "pnpm build && BROWSER_QA_SERVER_MODE=start node scripts/browser-qa.mjs",
+    "test:full": "pnpm test && pnpm test:browser"
+  },
+  "dependencies": {
+    "@next/font": "latest",
+    "next": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "lucide-react": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "typescript": "latest"
+  }
+}
