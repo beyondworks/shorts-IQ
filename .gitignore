@@ -13,6 +13,9 @@
 # runtime download artifacts (binary clips)
 /.data/clips/
 
+# local data backups
+/.data/*.bak
+
 # os / editor / local tooling
 .DS_Store
 /.omx/
