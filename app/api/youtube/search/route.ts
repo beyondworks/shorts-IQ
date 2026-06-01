@@ -11,6 +11,8 @@ export async function POST(request: Request) {
     language?: string;
     maxResults?: number;
     order?: string;
+    publishedAfter?: string;
+    publishedBefore?: string;
     query?: string;
     regionCode?: string;
     template?: string;

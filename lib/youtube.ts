@@ -9,6 +9,8 @@ export type YoutubeImportPayload = {
   language?: string;
   maxResults?: number;
   order?: string;
+  publishedAfter?: string;
+  publishedBefore?: string;
   query?: string;
   regionCode?: string;
   template?: string;
@@ -92,6 +94,8 @@ export const buildYoutubeImportPlan = (payload: YoutubeImportPayload): YoutubeIm
     type: 'video',
     videoDuration: 'short',
   });
+  if (payload.publishedAfter) searchParams.set('publishedAfter', payload.publishedAfter);
+  if (payload.publishedBefore) searchParams.set('publishedBefore', payload.publishedBefore);
   if (key) searchParams.set('key', key);
 
   return {
