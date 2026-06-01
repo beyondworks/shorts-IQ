@@ -5,12 +5,12 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Activity, Archive, BarChart3, Bookmark, Check, ChevronDown, Download, Eye, Filter,
-  Folder, Grid3X3, LayoutDashboard, Library, MoreHorizontal, Play, Search,
-  Sparkles, Star, TimerReset, X, ArrowLeft, Layers, Scissors, ShieldCheck, SlidersHorizontal, AlertTriangle, FileVideo, ScanLine, Waves, Fingerprint,
+  Folder, LayoutDashboard, Library, MoreHorizontal, Play, Search,
+  Sparkles, Star, TimerReset, X, ArrowLeft, Scissors, ShieldCheck, SlidersHorizontal, AlertTriangle, FileVideo, ScanLine, Waves, Fingerprint,
 } from 'lucide-react';
 import { categoryOptions, templateOptions } from '../lib/catalog';
 import {
-  commentsScore, durationSeconds, formatCompact, pct, scorecardCurve,
+  commentsScore, computeBaseline, durationSeconds, formatCompact, measuredVelocity, pct, scorecardCurve,
   scoreWindows, shareScore, uploadedHours, velocityNumber, vidiqMetrics,
   type ScoreWindow,
 } from '../lib/metrics';
@@ -19,7 +19,6 @@ import type { AppState, DownloadClip, FolderItem, MatchReport, TemplatePattern, 
 const navItems = [
   { label: 'Dashboard', href: '/', icon: LayoutDashboard },
   { label: 'Trend Rankings', href: '/rankings', icon: BarChart3 },
-  { label: 'Template Explorer', href: '/templates', icon: Grid3X3 },
   { label: 'Video Search', href: '/search', icon: Search },
   { label: 'Saved Library', href: '/saved', icon: Library },
   { label: 'Folders', href: '/folders', icon: Folder },
@@ -31,21 +30,24 @@ const intentPresets = [
   { title: '바로 따라 만들 템플릿', desc: '재현 쉬운 구조 + 30초 내 클립', template: 'Tutorial Steps', category: '전체' },
   { title: '광고/커머스 후킹', desc: '상품 데모, 전후비교, 구매 전환형', template: 'Product Demo', category: '전체' },
   { title: '조회수 급상승 레퍼런스', desc: '카테고리 무관 전체 실시간 인기', template: '전체', category: '전체' },
-  { title: '자막/밈 포맷 수집', desc: '캡션 카드, 밈, 반응형 포맷', template: 'Caption Meme', category: '엔터' },
+  { title: '자막/밈 포맷 수집', desc: '캡션 카드, 밈, 반응형 포맷', template: 'Caption Meme', category: '전체' },
 ];
 const filterGroups = {
   uploaded: ['전체 기간', '실시간', '업로드 24h', '업로드 3일', '14일', '30일', '60일', '90일', '180일', '1년 이상'],
   views: ['전체 조회수', '조회수 10만+', '조회수 50만+', '조회수 100만+'],
   duration: ['전체 길이', '숏츠 길이 30s↓', '숏츠 길이 60s↓'],
   language: ['전체 언어', '한국어', '영어'],
-  sort: ['급상승순', '조회수순', '저장률순', '최신순', '댓글수순', '공유순'],
+  subscribers: ['전체 규모', '소형 1만↓', '중형 10만↓', '대형 제외 100만↓'],
+  sort: ['급상승순', '조회수순', '저장률순', '최신순', '댓글수순', '공유순', '급가속순'],
 };
 type DiscoveryFilters = { [K in keyof typeof filterGroups]: (typeof filterGroups)[K][number] };
-const defaultFilters: DiscoveryFilters = { uploaded: '전체 기간', views: '전체 조회수', duration: '전체 길이', language: '한국어', sort: '급상승순' };
-const filterLabelMap: Record<keyof DiscoveryFilters, string> = { uploaded: '업로드', views: '조회수', duration: '길이', language: '언어', sort: '정렬' };
+const defaultFilters: DiscoveryFilters = { uploaded: '전체 기간', views: '전체 조회수', duration: '전체 길이', language: '한국어', subscribers: '전체 규모', sort: '급상승순' };
+const filterLabelMap: Record<keyof DiscoveryFilters, string> = { uploaded: '업로드', views: '조회수', duration: '길이', language: '언어', subscribers: '채널규모', sort: '정렬' };
 const filterSummary = (filters: DiscoveryFilters) => Object.values(filters).join(' · ');
 const uploadWindowHours = (window: DiscoveryFilters['uploaded']) => window === '실시간' ? 1 : window === '업로드 24h' ? 24 : window === '업로드 3일' ? 72 : window === '14일' ? 336 : window === '30일' ? 720 : window === '60일' ? 1440 : window === '90일' ? 2160 : window === '180일' ? 4320 : window === '1년 이상' ? Infinity : Infinity;
-type PageKind = 'dashboard' | 'rankings' | 'templates' | 'search' | 'saved' | 'folders' | 'downloads' | 'match' | 'video-detail';
+// 채널규모 필터의 구독자 상한값. '전체 규모'면 null(제한 없음).
+const subscriberBound = (scale: DiscoveryFilters['subscribers']): number | null => scale === '소형 1만↓' ? 10000 : scale === '중형 10만↓' ? 100000 : scale === '대형 제외 100만↓' ? 1000000 : null;
+type PageKind = 'dashboard' | 'rankings' | 'search' | 'saved' | 'folders' | 'downloads' | 'match' | 'video-detail';
 type ActionName = 'sync' | 'save' | 'folder' | 'download' | 'match' | 'ingest' | 'youtube' | null;
 
 const videoQueryParams = (category: string, template: string, filters: DiscoveryFilters, query: string) => {
@@ -57,6 +59,9 @@ const videoQueryParams = (category: string, template: string, filters: Discovery
   params.set('views', filters.views);
   params.set('duration', filters.duration);
   params.set('language', filters.language);
+  if (filters.subscribers === '소형 1만↓') params.set('maxSubscribers', '1만');
+  else if (filters.subscribers === '중형 10만↓') params.set('maxSubscribers', '10만');
+  else if (filters.subscribers === '대형 제외 100만↓') params.set('maxSubscribers', '100만');
   params.set('sort', filters.sort);
   return params;
 };
@@ -122,6 +127,7 @@ export function PrototypeApp({ page = 'dashboard', videoId }: { page?: PageKind;
       views: valueFromParams(params, 'views', filterGroups.views, defaultFilters.views),
       duration: valueFromParams(params, 'duration', filterGroups.duration, defaultFilters.duration),
       language: valueFromParams(params, 'language', filterGroups.language, defaultFilters.language),
+      subscribers: valueFromParams(params, 'subscribers', filterGroups.subscribers, defaultFilters.subscribers),
       sort: valueFromParams(params, 'sort', filterGroups.sort, defaultFilters.sort),
     });
   }, []);
@@ -256,30 +262,36 @@ export function PrototypeApp({ page = 'dashboard', videoId }: { page?: PageKind;
 
   useEffect(() => {
     if (!appState) return;
-    let cancelled = false;
     const url = `/api/videos${discoveryQuery ? `?${discoveryQuery}` : ''}`;
     setServerQueryUrl(url);
-    setServerVideos(null);
-    setDiscoveryLoading(true);
-    setDiscoveryError(null);
 
-    fetch(url, { cache: 'no-store' })
-      .then(async (response) => {
-        if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
-        return response.json() as Promise<{ videos: VideoItem[] }>;
-      })
-      .then((body) => {
-        if (!cancelled) setServerVideos(body.videos);
-      })
-      .catch((error) => {
-        if (!cancelled) setDiscoveryError(error instanceof Error ? error.message : '알 수 없는 오류');
-      })
-      .finally(() => {
-        if (!cancelled) setDiscoveryLoading(false);
-      });
+    const controller = new AbortController();
+    // 빠른 연속 필터 변경 시 200ms 디바운스 후 1회만 요청. 직전 in-flight 요청은 abort.
+    const timer = setTimeout(() => {
+      setServerVideos(null);
+      setDiscoveryLoading(true);
+      setDiscoveryError(null);
+
+      fetch(url, { cache: 'no-store', signal: controller.signal })
+        .then(async (response) => {
+          if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+          return response.json() as Promise<{ videos: VideoItem[] }>;
+        })
+        .then((body) => {
+          setServerVideos(body.videos);
+        })
+        .catch((error) => {
+          if (error instanceof DOMException && error.name === 'AbortError') return;
+          setDiscoveryError(error instanceof Error ? error.message : '알 수 없는 오류');
+        })
+        .finally(() => {
+          if (!controller.signal.aborted) setDiscoveryLoading(false);
+        });
+    }, 200);
 
     return () => {
-      cancelled = true;
+      clearTimeout(timer);
+      controller.abort();
     };
   }, [appState, discoveryQuery]);
 
@@ -297,8 +309,9 @@ export function PrototypeApp({ page = 'dashboard', videoId }: { page?: PageKind;
     .filter((video) => filters.views === '전체 조회수' || video.viewCount >= Number(filters.views.match(/(\d+)/)?.[1] ?? 0) * 10000)
     .filter((video) => filters.duration === '전체 길이' || durationSeconds(video.duration) <= Number(filters.duration.match(/(\d+)/)?.[1] ?? 60))
     .filter((video) => filters.language === '전체 언어' || (video.language ?? '한국어') === filters.language)
+    .filter((video) => subscriberBound(filters.subscribers) === null || video.subscriberCount == null || video.subscriberCount <= subscriberBound(filters.subscribers)!)
     .filter((video) => `${video.title} ${video.channel} ${video.template} ${video.category}`.toLowerCase().includes(query.toLowerCase()))
-    .sort((a, b) => filters.sort === '조회수순' ? b.viewCount - a.viewCount : filters.sort === '최신순' ? a.rank - b.rank : filters.sort === '저장률순' ? pct(b.saveRate) - pct(a.saveRate) : filters.sort === '댓글수순' ? commentsScore(b) - commentsScore(a) : filters.sort === '공유순' ? shareScore(b) - shareScore(a) : a.rank - b.rank),
+    .sort((a, b) => filters.sort === '조회수순' ? b.viewCount - a.viewCount : filters.sort === '최신순' ? a.rank - b.rank : filters.sort === '저장률순' ? pct(b.saveRate) - pct(a.saveRate) : filters.sort === '댓글수순' ? commentsScore(b) - commentsScore(a) : filters.sort === '공유순' ? shareScore(b) - shareScore(a) : filters.sort === '급가속순' ? measuredVelocity(b).perHour - measuredVelocity(a).perHour : a.rank - b.rank),
   [activeCategory, activeTemplate, filters, query, videoState]);
   const filteredVideos = serverVideos ?? clientFilteredVideos;
   const activeFilter = `${filterSummary(filters)} · ${serverVideos ? 'server results' : 'local fallback'}`;
@@ -370,15 +383,14 @@ export function PrototypeApp({ page = 'dashboard', videoId }: { page?: PageKind;
         <Topbar query={query} setQuery={setQuery} advancedOpen={advancedOpen} setAdvancedOpen={setAdvancedOpen} onSync={runSync} syncing={pendingAction === 'sync'} actionMessage={actionMessage} apiError={apiError} />
         {pathname !== '/' && page !== 'video-detail' && <BackButton fallback="/" label="이전 페이지" />}
         {advancedOpen && <DiscoveryPanel activeCategory={activeCategory} activeTemplate={activeTemplate} applyPreset={applyPreset} setActiveCategory={setActiveCategory} setActiveTemplate={setActiveTemplate} />}
-        {page === 'dashboard' && <DashboardPage selected={selected} filteredVideos={filteredVideos} activeCategory={activeCategory} activeTemplate={activeTemplate} activeFilter={activeFilter} serverQueryUrl={serverQueryUrl} discoveryLoading={discoveryLoading} discoveryError={discoveryError} filters={filters} setFilters={setFilters} savedCount={savedCount} downloads={downloads} templates={templates} totalVideos={videoState.length} folderStats={folderStats} resetDiscovery={resetDiscovery} setActiveTemplate={setActiveTemplate} setSelectedId={setSelectedId} toggleSaved={toggleSaved} setFolderModal={setFolderModal} setDownloadModal={setDownloadModal} clipStart={clipStart} clipEnd={clipEnd} setClipStart={setClipStart} setClipEnd={setClipEnd} assignFolder={assignFolder} pendingAction={pendingAction} />}
+        {page === 'dashboard' && <DashboardPage selected={selected} peers={videoState} filteredVideos={filteredVideos} activeCategory={activeCategory} activeTemplate={activeTemplate} activeFilter={activeFilter} serverQueryUrl={serverQueryUrl} discoveryLoading={discoveryLoading} discoveryError={discoveryError} filters={filters} setFilters={setFilters} savedCount={savedCount} downloads={downloads} templates={templates} totalVideos={videoState.length} folderStats={folderStats} resetDiscovery={resetDiscovery} setActiveTemplate={setActiveTemplate} setSelectedId={setSelectedId} toggleSaved={toggleSaved} setFolderModal={setFolderModal} setDownloadModal={setDownloadModal} clipStart={clipStart} clipEnd={clipEnd} setClipStart={setClipStart} setClipEnd={setClipEnd} assignFolder={assignFolder} pendingAction={pendingAction} />}
         {page === 'rankings' && <RankingsPage videos={filteredVideos} activeCategory={activeCategory} activeTemplate={activeTemplate} activeFilter={activeFilter} serverQueryUrl={serverQueryUrl} discoveryLoading={discoveryLoading} discoveryError={discoveryError} filters={filters} setFilters={setFilters} setSelectedId={setSelectedId} toggleSaved={toggleSaved} setDownloadModal={setDownloadModal} setFolderModal={setFolderModal} pendingAction={pendingAction} />}
-        {page === 'templates' && <TemplatesPage templates={templates} setActiveTemplate={setActiveTemplate} />}
         {page === 'search' && <SearchPage query={query} setQuery={setQuery} activeCategory={activeCategory} activeTemplate={activeTemplate} serverQueryUrl={serverQueryUrl} discoveryLoading={discoveryLoading} discoveryError={discoveryError} setActiveCategory={setActiveCategory} setActiveTemplate={setActiveTemplate} filteredVideos={filteredVideos} setSelectedId={setSelectedId} toggleSaved={toggleSaved} setDownloadModal={setDownloadModal} setFolderModal={setFolderModal} onIngest={ingestReference} ingesting={pendingAction === 'ingest'} onYoutubeImport={importYoutubeKeyword} youtubeImporting={pendingAction === 'youtube'} />}
         {page === 'saved' && <SavedPage videos={videoState.filter((v) => v.saved)} setSelectedId={setSelectedId} toggleSaved={toggleSaved} setDownloadModal={setDownloadModal} setFolderModal={setFolderModal} />}
         {page === 'folders' && <FoldersPage folderStats={folderStats} videos={videoState} downloads={downloads} setSelectedId={setSelectedId} toggleSaved={toggleSaved} setDownloadModal={setDownloadModal} setFolderModal={setFolderModal} />}
         {page === 'match' && <MatchGuardPage selected={selected} report={matchReports[0]} onCreateReport={createMatchReport} creating={pendingAction === 'match'} />}
         {page === 'downloads' && <DownloadsPage downloads={downloads} videos={videoState} selected={selected} folderStats={folderStats} clipStart={clipStart} clipEnd={clipEnd} setClipStart={setClipStart} setClipEnd={setClipEnd} setSelectedId={setSelectedId} setDownloadModal={setDownloadModal} assignFolder={assignFolder} updateDownload={updateDownload} processDownload={processDownload} processing={pendingAction === 'download'} />}
-        {page === 'video-detail' && <VideoDetailPage selected={selected} detailApiUrl={`/api/videos/${encodeURIComponent(selected.id)}`} related={videoState.filter((v) => v.id !== selected.id).slice(0, 4)} setSelectedId={setSelectedId} setDownloadModal={setDownloadModal} setFolderModal={setFolderModal} toggleSaved={toggleSaved} />}
+        {page === 'video-detail' && <VideoDetailPage selected={selected} peers={videoState} detailApiUrl={`/api/videos/${encodeURIComponent(selected.id)}`} related={videoState.filter((v) => v.id !== selected.id).slice(0, 4)} setSelectedId={setSelectedId} setDownloadModal={setDownloadModal} setFolderModal={setFolderModal} toggleSaved={toggleSaved} />}
       </section>
       {folderModal && <FolderModal selected={selected} folders={folders} onClose={() => setFolderModal(false)} onAssign={assignFolder} />}
       {downloadModal && <DownloadModal selected={selected} clipStart={clipStart} clipEnd={clipEnd} setClipStart={setClipStart} setClipEnd={setClipEnd} onClose={() => setDownloadModal(false)} onAdd={addDownload} />}
@@ -405,7 +417,7 @@ function BackButton({ fallback = '/', label = '이전 페이지' }: { fallback?:
   return <button className="backLink backButton" type="button" onClick={goBack}><ArrowLeft size={14} /> {label}</button>;
 }
 function Topbar({ query, setQuery, advancedOpen, setAdvancedOpen, onSync, syncing, actionMessage, apiError }: { query: string; setQuery: (v: string) => void; advancedOpen: boolean; setAdvancedOpen: (v: boolean) => void; onSync: () => void; syncing: boolean; actionMessage: string; apiError: string | null }) {
-  return <header className="topbar"><div className="searchBox"><Search size={16} /><input aria-label="영상 검색" placeholder="영상, 채널, 템플릿, 키워드 검색..." value={query} onChange={(event) => setQuery(event.target.value)} /><kbd>⌘K</kbd></div><button className={`ghost ${advancedOpen ? 'selected' : ''}`} onClick={() => setAdvancedOpen(!advancedOpen)}><Filter size={14} /> Find videos</button><button className="primary" onClick={onSync} disabled={syncing}><Activity size={14} /> {syncing ? 'Syncing' : 'Live sync'}</button><div className={`topbarStatus ${apiError ? 'error' : ''}`}>{apiError ? 'API 오류' : actionMessage}</div></header>;
+  return <header className="topbar"><div className="searchBox"><Search size={16} /><input aria-label="영상 검색" placeholder="영상, 채널, 템플릿, 키워드 검색..." value={query} onChange={(event) => setQuery(event.target.value)} /><kbd>⌘K</kbd></div><button className={`ghost ${advancedOpen ? 'selected' : ''}`} onClick={() => setAdvancedOpen(!advancedOpen)}><Filter size={14} /> Find videos</button><button className="primary" onClick={onSync} disabled={syncing}><Activity size={14} /> {syncing ? 'Syncing' : 'Live sync'}</button><div className={`topbarStatus ${apiError ? 'error' : ''}`} aria-live="polite" {...(apiError ? { role: 'alert' } : {})}>{apiError ? 'API 오류' : actionMessage}</div></header>;
 }
 function DiscoveryPanel({ activeCategory, activeTemplate, applyPreset, setActiveCategory, setActiveTemplate }: { activeCategory: string; activeTemplate: string; applyPreset: (p: typeof intentPresets[number]) => void; setActiveCategory: (v: string) => void; setActiveTemplate: (v: string) => void }) {
   return <section className="advancedPanel discoveryPanel" aria-label="Advanced filter panel"><div className="discoveryIntro"><span className="miniLabel">DISCOVERY BUILDER</span><strong>무엇을 찾고 싶은지 먼저 고르면, 카테고리와 템플릿을 좁혀줍니다.</strong><p>기본 랭킹은 항상 전체 영상 기준 실시간 인기입니다. 아래 조건은 “찾기/분석”용 필터입니다.</p></div><div className="intentGrid">{intentPresets.map((preset) => <button key={preset.title} onClick={() => applyPreset(preset)}><b>{preset.title}</b><span>{preset.desc}</span></button>)}</div><div className="taxonomyBlock"><span>카테고리</span><div>{categoryOptions.map((cat) => <button className={activeCategory === cat ? 'activeChip' : ''} key={cat} onClick={() => setActiveCategory(cat)}>{cat}</button>)}</div></div><div className="taxonomyBlock"><span>템플릿</span><div>{templateOptions.map((tpl) => <button className={activeTemplate === tpl ? 'activeChip' : ''} key={tpl} onClick={() => setActiveTemplate(tpl)}>{tpl}</button>)}</div></div></section>;
@@ -442,7 +454,7 @@ function FilterRail({ filters, setFilters }: { filters: DiscoveryFilters; setFil
 }
 function TemplateSignals({ templates, setActiveTemplate, resetDiscovery }: { templates: TemplatePattern[]; setActiveTemplate: (v: string) => void; resetDiscovery?: () => void }) { return <><section className="templateSignalHeader"><div><span className="miniLabel">TEMPLATE SIGNALS</span><h2>왜 #1~#4 카드가 있나요?</h2><p>전체 실시간 인기 영상에서 반복적으로 발견되는 “템플릿 패턴” 순위입니다. 카드를 누르면 해당 포맷의 영상만 좁혀볼 수 있습니다.</p></div><button className="ghost small" onClick={resetDiscovery}>전체 랭킹 보기</button></section><section className="templateGrid">{templates.slice(0, 4).map((template, idx) => <button className={`templateCard ${template.tone}`} key={template.name} onClick={() => setActiveTemplate(template.name)}><div className="templateTop"><span>#{idx + 1} signal</span><Bookmark size={13} /></div><h3>{template.name}</h3><p>{template.type}</p><div className="metricLine"><strong>{template.views}</strong><em>{template.delta}</em></div><p className="templateWhy">{template.why}</p><div className="templateMeta"><span>{template.count} videos</span><span>전체 영상 기준</span></div></button>)}{templates.length === 0 && <div className="emptyState">템플릿 데이터가 아직 없습니다. Live sync 후 다시 확인하세요.</div>}</section></>; }
 function RankingPanel({ filteredVideos, activeCategory = '전체', activeTemplate = '전체', activeFilter = '전체 실시간 인기', serverQueryUrl, discoveryLoading, discoveryError, setSelectedId, toggleSaved, setDownloadModal, setFolderModal }: any) { return <div className="rankPanel"><div className="panelHead"><div><span className="miniLabel">GLOBAL LIVE RANKING</span><h2>전체 실시간 인기 영상</h2><p className="panelSub">현재 조건: {activeCategory} · {activeTemplate} · {activeFilter}</p><p className={`serverQuery ${discoveryError ? 'error' : ''}`}>{discoveryError ? `API fallback: ${discoveryError}` : `${discoveryLoading ? 'syncing' : 'server'} ${serverQueryUrl}`}</p></div><div className="panelActions"><button className="ghost small">Reset</button><button className="ghost small">Export CSV</button></div></div><div className="tableHeader"><span>Rank</span><span>Video</span><span>Template</span><span>Views</span><span>Velocity</span><span>Action</span></div><VideoRows videos={filteredVideos} setSelectedId={setSelectedId} toggleSaved={toggleSaved} setDownloadModal={setDownloadModal} setFolderModal={setFolderModal} /></div>; }
-function VideoRows({ videos: rows, setSelectedId, toggleSaved, setDownloadModal, setFolderModal }: { videos: VideoItem[]; setSelectedId: (id: string) => void; toggleSaved: (id: string) => void; setDownloadModal: (v: boolean) => void; setFolderModal: (v: boolean) => void }) { return <div className="videoRows">{rows.map((video) => <article className="videoRow" key={video.id} onClick={() => setSelectedId(video.id)}><div className="rank"><b>{video.rank}</b><em>▲ {Math.max(2, 14 - video.rank)}</em></div><Link className="videoInfo" href={`/videos/${video.id}`}><VideoThumb video={video} /><div><h3>{video.title}</h3><p>{video.channel} · {video.uploaded} · {video.category}</p></div></Link><span className="pill">{video.template}</span><strong className="mono">{video.views}</strong><span className="velocity">{video.velocity}</span><div className="rowActions"><button aria-label="북마크" className={video.saved ? 'icon saved' : 'icon'} onClick={(event) => { event.stopPropagation(); toggleSaved(video.id); }}><Star size={13} /></button><button aria-label="구간 다운로드" className="icon" onClick={(event) => { event.stopPropagation(); setSelectedId(video.id); setDownloadModal(true); }}><Download size={13} /></button><button aria-label="폴더 선택" className="icon" onClick={(event) => { event.stopPropagation(); setSelectedId(video.id); setFolderModal(true); }}><MoreHorizontal size={13} /></button></div></article>)}{rows.length === 0 && <div className="emptyState">조건이 너무 좁습니다. 전체 랭킹 보기로 되돌려보세요.</div>}</div>; }
+function VideoRows({ videos: rows, setSelectedId, toggleSaved, setDownloadModal, setFolderModal }: { videos: VideoItem[]; setSelectedId: (id: string) => void; toggleSaved: (id: string) => void; setDownloadModal: (v: boolean) => void; setFolderModal: (v: boolean) => void }) { return <div className="videoRows">{rows.map((video) => <article className="videoRow" key={video.id} onClick={() => setSelectedId(video.id)}><div className="rank"><b>{video.rank}</b><em>▲ {Math.max(2, 14 - video.rank)}</em></div><Link className="videoInfo" href={`/videos/${video.id}`}><VideoThumb video={video} /><div><h3>{video.title}</h3><p>{video.channel} · {video.uploaded} · {video.category}</p></div></Link><span className="pill">{video.template}</span><strong className="mono">{video.views}</strong>{(() => { const mv = measuredVelocity(video); return <span className="velocity">+{formatCompact(mv.perHour)}/h{!mv.measured && <em className="miniLabel"> 추정</em>}</span>; })()}<div className="rowActions"><button aria-label="북마크" className={video.saved ? 'icon saved' : 'icon'} onClick={(event) => { event.stopPropagation(); toggleSaved(video.id); }}><Star size={13} /></button><button aria-label="구간 다운로드" className="icon" onClick={(event) => { event.stopPropagation(); setSelectedId(video.id); setDownloadModal(true); }}><Download size={13} /></button><button aria-label="폴더 선택" className="icon" onClick={(event) => { event.stopPropagation(); setSelectedId(video.id); setFolderModal(true); }}><MoreHorizontal size={13} /></button></div></article>)}{rows.length === 0 && <div className="emptyState">조건이 너무 좁습니다. 전체 랭킹 보기로 되돌려보세요.</div>}</div>; }
 function ScorecardCurve({ selected }: { selected: VideoItem }) {
   const [window, setWindow] = useState<ScoreWindow>('All');
   const curve = scorecardCurve(selected, window);
@@ -457,25 +469,24 @@ function ScorecardCurve({ selected }: { selected: VideoItem }) {
     <div className="scoreAxis x">{curve.labels.map((label, index) => <span key={`${label}-${index}`}>{label}</span>)}</div>
   </div>;
 }
-function VidiqInsightPanel({ selected, compact = false }: { selected: VideoItem; compact?: boolean }) {
-  const metrics = vidiqMetrics(selected);
+function VidiqInsightPanel({ selected, peers = [], compact = false }: { selected: VideoItem; peers?: VideoItem[]; compact?: boolean }) {
+  const metrics = vidiqMetrics(selected, computeBaseline(peers, selected));
   return <div className={`vidiqPanel ${compact ? 'compact' : ''}`}>
     <div className="vidiqCardTop"><div><span className="miniLabel">vidIQ SCORECARD</span><h3>Views</h3><strong>{formatCompact(selected.viewCount)}</strong></div><div className="iqBadge">IQ</div></div>
     <ScorecardCurve selected={selected} />
-    <div className="vidiqMetricRows"><div><span>Uploaded</span><b>{selected.uploaded}</b></div><div><span>Views per hour</span><b>{formatCompact(metrics.vph)}</b></div><div><span>Engagement</span><b>{metrics.engagement}%</b></div></div>
-    <div className="vidiqScoreRow"><strong>{metrics.score}</strong><div><b>{metrics.grade}</b><span>overall score · outlier {metrics.outlier}x</span></div></div>
+    <div className="vidiqMetricRows"><div><span>Uploaded</span><b>{selected.uploaded}</b></div><div><span>Views per hour</span><b>{formatCompact(metrics.vph)}</b></div><div><span>Engagement</span><b>{metrics.engagement}% <em className="miniLabel">{metrics.measured.engagement ? '측정' : '추정'}</em></b></div></div>
+    <div className="vidiqScoreRow"><strong>{metrics.score}</strong><div><b>{metrics.grade}</b><span>overall score · outlier {metrics.measured.outlier === false ? '표본 부족' : `${metrics.outlier}x`}</span></div></div>
     <div className="vidiqMetricGrid">
-      <span><b>{formatCompact(metrics.velocity)}</b><em>velocity</em></span>
+      <span><b>{formatCompact(metrics.velocity)}</b><em>velocity · {metrics.measured.velocity ? '측정' : '추정'}</em></span>
       <span><b>{formatCompact(metrics.comments)}</b><em>comments est.</em></span>
       <span><b>{formatCompact(metrics.shares)}</b><em>shares est.</em></span>
-      <span><b>{selected.saveRate}</b><em>save rate</em></span>
+      <span><b>{selected.saveRate}</b><em>save rate{selected.metricsProxy ? ' · 추정' : ''}</em></span>
     </div>
-    <p className="insightCopy">초반 급상승 후 완만히 plateau 되는 vidIQ식 누적 조회 커브를 기준으로 VPH, outlier, engagement를 함께 판정합니다.</p>
+    <p className="insightCopy">초반 급상승 후 완만히 plateau 되는 vidIQ식 누적 조회 커브를 기준으로 VPH, outlier, engagement를 함께 판정합니다. ‘측정’은 실측 샘플, ‘추정’은 proxy 기반입니다.</p>
   </div>;
 }
-function DetailPanel({ selected, folderStats, clipStart, clipEnd, setClipStart, setClipEnd, setDownloadModal, assignFolder }: any) { return <aside className="detailPanel"><div className="selectedPreview"><div className="phoneFrame"><VideoPreview video={selected} /></div><div><span className="miniLabel">SELECTED VIDEO</span><h2>{selected.title}</h2><p>{selected.template} · {selected.category} · {selected.uploaded}</p></div></div><VidiqInsightPanel selected={selected} /><div className="clipBox"><div className="boxHead"><Download size={14} /> 구간 선택 다운로드</div><div className="timeline"><span style={{ left: `${clipStart * 2}%` }} /><span style={{ left: `${clipEnd * 2}%` }} /><div style={{ left: `${clipStart * 2}%`, right: `${100 - clipEnd * 2}%` }} /></div><div className="timeInputs"><button onClick={() => setClipStart(3)}>00:{String(clipStart).padStart(2, '0')}</button><button onClick={() => setClipEnd(31)}>00:{String(clipEnd).padStart(2, '0')}</button><button onClick={() => setDownloadModal(true)}>{clipEnd - clipStart}s clip</button></div></div><div className="folderBox"><div className="boxHead"><Archive size={14} /> Raindrop-style folders</div>{folderStats.map((folder: any) => <button className={`folderItem ${selected.folder === folder.name ? 'currentFolder' : ''}`} key={folder.name} onClick={() => assignFolder(folder.name)}><i style={{ background: folder.color }} /><span>{folder.name}</span><em>{folder.count}</em></button>)}</div></aside>; }
+function DetailPanel({ selected, peers = [], folderStats, clipStart, clipEnd, setClipStart, setClipEnd, setDownloadModal, assignFolder }: any) { return <aside className="detailPanel"><div className="selectedPreview"><div className="phoneFrame"><VideoPreview video={selected} /></div><div><span className="miniLabel">SELECTED VIDEO</span><h2>{selected.title}</h2><p>{selected.template} · {selected.category} · {selected.uploaded}</p></div></div><VidiqInsightPanel selected={selected} peers={peers} /><div className="clipBox"><div className="boxHead"><Download size={14} /> 구간 선택 다운로드</div><div className="timeline"><span style={{ left: `${clipStart * 2}%` }} /><span style={{ left: `${clipEnd * 2}%` }} /><div style={{ left: `${clipStart * 2}%`, right: `${100 - clipEnd * 2}%` }} /></div><div className="timeInputs"><button onClick={() => setClipStart(3)}>00:{String(clipStart).padStart(2, '0')}</button><button onClick={() => setClipEnd(31)}>00:{String(clipEnd).padStart(2, '0')}</button><button onClick={() => setDownloadModal(true)}>{clipEnd - clipStart}s clip</button></div></div><div className="folderBox"><div className="boxHead"><Archive size={14} /> Raindrop-style folders</div>{folderStats.map((folder: any) => <button className={`folderItem ${selected.folder === folder.name ? 'currentFolder' : ''}`} key={folder.name} onClick={() => assignFolder(folder.name)}><i style={{ background: folder.color }} /><span>{folder.name}</span><em>{folder.count}</em></button>)}</div></aside>; }
 function RankingsPage(props: any) { return <><Hero eyebrow="TREND RANKINGS" title="카테고리에 갇히지 않은 전체 실시간 랭킹." desc="기본은 전체 랭킹입니다. 카테고리와 템플릿은 분석을 위한 보조 축으로만 작동합니다." stats={[[String(props.videos.length), 'visible videos'], ['+78.1K/h', 'top velocity']]} /><FilterRail filters={props.filters} setFilters={props.setFilters} /><section className="widePanel"><RankingPanel filteredVideos={props.videos} {...props} /></section></>; }
-function TemplatesPage({ templates, setActiveTemplate }: { templates: TemplatePattern[]; setActiveTemplate: (v: string) => void }) { return <><Hero eyebrow="TEMPLATE EXPLORER" title="반복되는 숏츠 포맷을 패턴 단위로 탐색합니다." desc="각 템플릿은 전체 실시간 인기 영상에서 반복 출현한 구조입니다. 용도, 상승률, 저장 가치 기준으로 비교합니다." stats={[[String(templates.length), 'core patterns'], ['13', 'taxonomy types']]} /><section className="templateExplorerGrid">{templates.map((template, idx) => <article className={`templateDeepCard ${template.tone}`} key={template.name}><div className="templateTop"><span>#{idx + 1} pattern</span><Layers size={14} /></div><div className="templatePatternHeader"><h2>{template.name}</h2><p>{template.why}</p></div><div className="deepMetrics"><span>{template.views}<em>views</em></span><span>{template.delta}<em>velocity</em></span><span>{template.count}<em>videos</em></span></div><div className="templateUse"><b>Best for</b><span>{template.bestFor}</span></div><button className="ghost small" onClick={() => setActiveTemplate(template.name)}>이 템플릿 영상 보기</button></article>)}</section></>; }
 const youtubeIdFromUrl = (sourceUrl?: string) => {
   if (!sourceUrl) return null;
   try {
@@ -617,26 +628,56 @@ function VideoNotFoundPage({ requestedId, totalVideos }: { requestedId: string; 
     </div>
   </section>;
 }
-function VideoDetailPage({ selected, detailApiUrl, related, setSelectedId, setDownloadModal, setFolderModal, toggleSaved }: any) {
-  const metrics = vidiqMetrics(selected);
-  return <><BackButton fallback="/rankings" label="랭킹으로 돌아가기" /><section className="videoDetailHero"><div className="detailPhone"><VideoPreview video={selected} size="large" /></div><div className="detailCopy"><span className="miniLabel">VIDEO DETAIL · vidIQ ANALYSIS</span><h1>{selected.title}</h1><p>{selected.channel} · {selected.category} · {selected.template} · {selected.uploaded}</p><p className="serverQuery">{detailApiUrl}</p><div className="detailActions"><button className="primary" onClick={() => setDownloadModal(true)}><Scissors size={14} /> 구간 다운로드</button><button className="ghost" onClick={() => setFolderModal(true)}><Folder size={14} /> 폴더 저장</button><button className="ghost" onClick={() => toggleSaved(selected.id)}><Star size={14} /> 북마크</button></div></div></section><section className="detailAnalytics vidiqAnalytics"><article><Eye size={16} /><span>Views</span><strong>{selected.views}</strong><em>{formatCompact(metrics.vph)} / hour</em></article><article><Activity size={16} /><span>vidIQ score</span><strong>{metrics.score}</strong><em>{metrics.grade} · {metrics.outlier}x outlier</em></article><article><ShieldCheck size={16} /><span>Retention</span><strong>{selected.retention}</strong><em>{metrics.engagement} engagement</em></article><article><Bookmark size={16} /><span>Save / Share</span><strong>{selected.saveRate}</strong><em>{formatCompact(metrics.shares)} share est.</em></article></section><section className="detailGrid vidiqDetailGrid"><VidiqInsightPanel selected={selected} compact /><article className="analysisCard"><h2>vidIQ 판단 로직</h2><p>{selected.hook}</p><ul><li>Views/hour: 업로드 후 경과 시간 대비 조회 속도</li><li>Outlier score: 동일 랭크 기대 조회수 대비 초과 배수</li><li>Engagement: 유지율·저장률·댓글/공유 추정 신호 합산</li><li>Action: 점수가 높을수록 템플릿 저장·구간 다운로드 우선</li></ul></article></section><section className="detailGrid"><article className="analysisCard"><h2>Hook breakdown</h2><p>{selected.hook}</p><ul><li>0–3s: 문제/결과를 먼저 보여주는 훅</li><li>4–18s: 템플릿 구조 반복으로 이해 비용 축소</li><li>19–31s: 저장/공유 포인트와 CTA</li></ul></article><article className="analysisCard"><h2>Reuse plan</h2><p>같은 템플릿을 다른 카테고리에 적용할 때의 제작 체크리스트입니다.</p><ul><li>첫 프레임에 결과물 또는 숫자를 노출</li><li>자막은 2줄 이하, 키워드만 하이라이트</li><li>전환 구간은 8–12초 사이에 배치</li></ul></article></section><section className="relatedBlock"><div className="panelHead"><div><span className="miniLabel">RELATED VIDEOS</span><h2>비슷한 패턴의 영상</h2></div></div><VideoRows videos={related} setSelectedId={setSelectedId} toggleSaved={toggleSaved} setDownloadModal={setDownloadModal} setFolderModal={setFolderModal} /></section></>;
+function VideoDetailPage({ selected, peers = [], detailApiUrl, related, setSelectedId, setDownloadModal, setFolderModal, toggleSaved }: any) {
+  const metrics = vidiqMetrics(selected, computeBaseline(peers, selected));
+  const outlierLabel = metrics.measured.outlier === false ? '표본 부족' : `${metrics.outlier}x`;
+  return <><BackButton fallback="/rankings" label="랭킹으로 돌아가기" /><section className="videoDetailHero"><div className="detailPhone"><VideoPreview video={selected} size="large" /></div><div className="detailCopy"><span className="miniLabel">VIDEO DETAIL · vidIQ ANALYSIS</span><h1>{selected.title}</h1><p>{selected.channel} · {selected.category} · {selected.template} · {selected.uploaded}</p><p className="serverQuery">{detailApiUrl}</p><div className="detailActions"><button className="primary" onClick={() => setDownloadModal(true)}><Scissors size={14} /> 구간 다운로드</button><button className="ghost" onClick={() => setFolderModal(true)}><Folder size={14} /> 폴더 저장</button><button className="ghost" onClick={() => toggleSaved(selected.id)}><Star size={14} /> 북마크</button></div></div></section><section className="detailAnalytics vidiqAnalytics"><article><Eye size={16} /><span>Views</span><strong>{selected.views}</strong><em>{formatCompact(metrics.vph)} / hour</em></article><article><Activity size={16} /><span>vidIQ score</span><strong>{metrics.score}</strong><em>{metrics.grade} · {outlierLabel} outlier</em></article><article><ShieldCheck size={16} /><span>Retention</span><strong>{selected.retention}{selected.metricsProxy ? ' · 추정' : ''}</strong><em>{metrics.engagement} engagement · {metrics.measured.engagement ? '측정' : '추정'}</em></article><article><Bookmark size={16} /><span>Save / Share</span><strong>{selected.saveRate}{selected.metricsProxy ? ' · 추정' : ''}</strong><em>{formatCompact(metrics.shares)} share est.</em></article></section><section className="detailGrid vidiqDetailGrid"><VidiqInsightPanel selected={selected} peers={peers} compact /><article className="analysisCard"><h2>vidIQ 판단 로직</h2><p>{selected.hook}</p><ul><li>Views/hour: 업로드 후 경과 시간 대비 조회 속도</li><li>Outlier score: 동일 랭크 기대 조회수 대비 초과 배수</li><li>Engagement: 유지율·저장률·댓글/공유 추정 신호 합산</li><li>Action: 점수가 높을수록 템플릿 저장·구간 다운로드 우선</li></ul></article></section><section className="detailGrid"><article className="analysisCard"><h2>Hook breakdown</h2><p>{selected.hook}</p><ul><li>0–3s: 문제/결과를 먼저 보여주는 훅</li><li>4–18s: 템플릿 구조 반복으로 이해 비용 축소</li><li>19–31s: 저장/공유 포인트와 CTA</li></ul></article><article className="analysisCard"><h2>Reuse plan</h2><p>같은 템플릿을 다른 카테고리에 적용할 때의 제작 체크리스트입니다.</p><ul><li>첫 프레임에 결과물 또는 숫자를 노출</li><li>자막은 2줄 이하, 키워드만 하이라이트</li><li>전환 구간은 8–12초 사이에 배치</li></ul></article></section><section className="relatedBlock"><div className="panelHead"><div><span className="miniLabel">RELATED VIDEOS</span><h2>비슷한 패턴의 영상</h2></div></div><VideoRows videos={related} setSelectedId={setSelectedId} toggleSaved={toggleSaved} setDownloadModal={setDownloadModal} setFolderModal={setFolderModal} /></section></>;
 }
-function FolderModal({ selected, folders, onClose, onAssign }: { selected: VideoItem; folders: FolderItem[]; onClose: () => void; onAssign: (folder: string) => void }) {
+// 모달 접근성: 마운트 시 첫 focusable로 focus 이동, Tab/Shift+Tab을 ref 내부에서 순환,
+// Escape로 닫기, 언마운트 시 직전 활성 요소로 focus 복원.
+function useModalA11y(ref: React.RefObject<HTMLElement | null>, onClose: () => void) {
   useEffect(() => {
-    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', closeOnEscape);
-    return () => document.removeEventListener('keydown', closeOnEscape);
-  }, [onClose]);
-  return <div className="modalBackdrop" role="dialog" aria-modal="true" aria-label="폴더 선택" onPointerDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><section className="modalCard compactModal"><div className="modalHead"><div><span className="miniLabel">SAVE TO FOLDER</span><h2>{selected.title}</h2></div><button className="icon" onClick={onClose}><X size={14} /></button></div><div className="modalList">{folders.map((folder) => <button key={folder.name} onClick={() => onAssign(folder.name)}><i style={{ background: folder.color }} /><span>{folder.name}</span>{selected.folder === folder.name && <Check size={14} />}</button>)}</div></section></div>;
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const container = ref.current;
+    const focusableSelector = 'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    const focusables = () => Array.from(container?.querySelectorAll<HTMLElement>(focusableSelector) ?? []).filter((el) => el.offsetParent !== null || el === document.activeElement);
+
+    focusables()[0]?.focus();
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { onClose(); return; }
+      if (event.key !== 'Tab') return;
+      const items = focusables();
+      if (items.length === 0) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      const active = document.activeElement as HTMLElement | null;
+      if (event.shiftKey) {
+        if (active === first || !container?.contains(active)) { event.preventDefault(); last.focus(); }
+      } else if (active === last || !container?.contains(active)) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      previouslyFocused?.focus?.();
+    };
+  }, [ref, onClose]);
+}
+
+function FolderModal({ selected, folders, onClose, onAssign }: { selected: VideoItem; folders: FolderItem[]; onClose: () => void; onAssign: (folder: string) => void }) {
+  const cardRef = useRef<HTMLElement | null>(null);
+  useModalA11y(cardRef, onClose);
+  return <div className="modalBackdrop" role="dialog" aria-modal="true" aria-label="폴더 선택" onPointerDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><section ref={cardRef} className="modalCard compactModal"><div className="modalHead"><div><span className="miniLabel">SAVE TO FOLDER</span><h2>{selected.title}</h2></div><button className="icon" onClick={onClose}><X size={14} /></button></div><div className="modalList">{folders.map((folder) => <button key={folder.name} onClick={() => onAssign(folder.name)}><i style={{ background: folder.color }} /><span>{folder.name}</span>{selected.folder === folder.name && <Check size={14} />}</button>)}</div></section></div>;
 }
 function DownloadModal({ selected, clipStart, clipEnd, setClipStart, setClipEnd, onClose, onAdd }: { selected: VideoItem; clipStart: number; clipEnd: number; setClipStart: (value: number) => void; setClipEnd: (value: number) => void; onClose: () => void; onAdd: () => void }) {
   const clipLength = clipEnd - clipStart;
   const rangeInvalid = clipLength <= 0;
   const [policyAccepted, setPolicyAccepted] = useState(false);
-  useEffect(() => {
-    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', closeOnEscape);
-    return () => document.removeEventListener('keydown', closeOnEscape);
-  }, [onClose]);
-  return <div className="modalBackdrop" role="dialog" aria-modal="true" aria-label="구간 선택 다운로드" onPointerDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><section className="modalCard downloadModal"><div className="modalHead"><div><span className="miniLabel">CLIP DOWNLOAD</span><h2>{selected.title}</h2></div><button className="icon" onClick={onClose}><X size={14} /></button></div><div className="downloadWorkspace"><div className="largePhone"><VideoPreview video={selected} size="large" /></div><div className="downloadControls"><div className={`downloadMetric ${rangeInvalid ? 'invalid' : ''}`}><TimerReset size={15} /><span>{Math.max(0, clipLength)}s selected</span><strong>00:{String(clipStart).padStart(2, '0')}–00:{String(clipEnd).padStart(2, '0')}</strong></div><div className="rangePair"><label>Start<input type="range" min="0" max="40" value={clipStart} onChange={(event) => setClipStart(Number(event.target.value))} aria-invalid={rangeInvalid} /></label><label>End<input type="range" min="10" max="50" value={clipEnd} onChange={(event) => setClipEnd(Number(event.target.value))} aria-invalid={rangeInvalid} /></label></div>{rangeInvalid && <p className="clipRangeError">종료 시간은 시작 시간보다 커야 합니다. 큐 추가는 유효한 구간에서만 가능합니다.</p>}<label className="policyConfirm"><input type="checkbox" checked={policyAccepted} onChange={(event) => setPolicyAccepted(event.target.checked)} /><span><b>정책 확인</b> 원본 재배포가 아니라 내부 레퍼런스 구간 큐로만 등록하며, 게시 전 저작권·플랫폼 정책을 별도 검토합니다.</span></label><div className="presetGrid">{[15, 30, 45].map((seconds) => <button key={seconds} onClick={() => { setClipStart(3); setClipEnd(3 + seconds); }}>{seconds}s preset</button>)}</div><button className="primary wide" onClick={() => { if (!rangeInvalid && policyAccepted) onAdd(); }} disabled={rangeInvalid || !policyAccepted}><Download size={14} /> 다운로드 큐에 추가</button></div></div></section></div>;
+  const cardRef = useRef<HTMLElement | null>(null);
+  useModalA11y(cardRef, onClose);
+  return <div className="modalBackdrop" role="dialog" aria-modal="true" aria-label="구간 선택 다운로드" onPointerDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><section ref={cardRef} className="modalCard downloadModal"><div className="modalHead"><div><span className="miniLabel">CLIP DOWNLOAD</span><h2>{selected.title}</h2></div><button className="icon" onClick={onClose}><X size={14} /></button></div><div className="downloadWorkspace"><div className="largePhone"><VideoPreview video={selected} size="large" /></div><div className="downloadControls"><div className={`downloadMetric ${rangeInvalid ? 'invalid' : ''}`}><TimerReset size={15} /><span>{Math.max(0, clipLength)}s selected</span><strong>00:{String(clipStart).padStart(2, '0')}–00:{String(clipEnd).padStart(2, '0')}</strong></div><div className="rangePair"><label>Start<input type="range" min="0" max="40" value={clipStart} onChange={(event) => setClipStart(Number(event.target.value))} aria-invalid={rangeInvalid} /></label><label>End<input type="range" min="10" max="50" value={clipEnd} onChange={(event) => setClipEnd(Number(event.target.value))} aria-invalid={rangeInvalid} /></label></div>{rangeInvalid && <p className="clipRangeError">종료 시간은 시작 시간보다 커야 합니다. 큐 추가는 유효한 구간에서만 가능합니다.</p>}<label className="policyConfirm"><input type="checkbox" checked={policyAccepted} onChange={(event) => setPolicyAccepted(event.target.checked)} /><span><b>정책 확인</b> 원본 재배포가 아니라 내부 레퍼런스 구간 큐로만 등록하며, 게시 전 저작권·플랫폼 정책을 별도 검토합니다.</span></label><div className="presetGrid">{[15, 30, 45].map((seconds) => <button key={seconds} onClick={() => { setClipStart(3); setClipEnd(3 + seconds); }}>{seconds}s preset</button>)}</div><button className="primary wide" onClick={() => { if (!rangeInvalid && policyAccepted) onAdd(); }} disabled={rangeInvalid || !policyAccepted}><Download size={14} /> 다운로드 큐에 추가</button></div></div></section></div>;
 }

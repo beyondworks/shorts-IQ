@@ -24,6 +24,12 @@ export type VideoItem = {
   sourceKind?: 'seed' | 'youtube-oembed' | 'youtube-api' | 'manual';
   language?: '한국어' | '영어' | '기타';
   viewsHistory?: { at: string; views: number }[];
+  likeCount?: number;
+  commentCount?: number;
+  subscriberCount?: number;
+  channelId?: string;
+  channelPublishedAt?: string;
+  metricsProxy?: boolean;
 };
 
 export type TemplatePattern = {

@@ -17,9 +17,11 @@ export const uploadedHours = (uploaded: string) => uploaded.includes('m')
 
 export const pct = (value: string) => Number(value.replace('%', ''));
 
-export const commentsScore = (video: VideoItem) => Math.round((video.viewCount / 1000) * (pct(video.retention) / 100) * (1 + (11 - video.rank) / 18));
+// 실측 댓글 수 우선, 없으면(seed 등) 조회수 기반 추정.
+export const commentsScore = (video: VideoItem) => video.commentCount ?? Math.round(video.viewCount * 0.003);
 
-export const shareScore = (video: VideoItem) => Math.round((video.viewCount / 1000) * (pct(video.saveRate) / 100) * (video.template.includes('Challenge') || video.template.includes('Caption') ? 1.55 : 1));
+// 공유 수는 YouTube이 공개하지 않음 → 좋아요(실측) 또는 조회수 기반 추정값(estimate).
+export const shareScore = (video: VideoItem) => Math.round((video.likeCount ?? video.viewCount * 0.02) * 0.12 * (video.template.includes('Challenge') || video.template.includes('Caption') ? 1.4 : 1));
 
 export const velocityNumber = (video: VideoItem) => Number(video.velocity.replace('+', '').replace('K/h', '')) * 1000;
 
@@ -29,16 +31,72 @@ export const formatCompact = (value: number) => value >= 1000000
     ? `${Math.round(value / 1000)}K`
     : String(value);
 
-export const vidiqMetrics = (video: VideoItem) => {
+// 실측 viewsHistory 샘플 차분으로 시간당 조회수 증가를 계산. 샘플 1개면 누적/연령 fallback.
+export const measuredVelocity = (video: VideoItem): { perHour: number; measured: boolean } => {
+  const samples = (video.viewsHistory ?? [])
+    .map((sample) => ({ t: Date.parse(sample.at), v: sample.views }))
+    .filter((sample) => Number.isFinite(sample.t) && Number.isFinite(sample.v))
+    .sort((a, b) => a.t - b.t);
+  if (samples.length >= 2) {
+    const first = samples[0];
+    const last = samples[samples.length - 1];
+    const hours = Math.max((last.t - first.t) / 36e5, 1 / 60);
+    return { perHour: Math.max(0, Math.round((last.v - first.v) / hours)), measured: true };
+  }
+  const age = Math.max(uploadedHours(video.uploaded), .5);
+  return { perHour: Math.round(video.viewCount / age), measured: false };
+};
+
+const ageBucket = (video: VideoItem) => {
+  const hours = uploadedHours(video.uploaded);
+  if (hours < 24) return '24h';
+  if (hours < 168) return '7d';
+  if (hours < 720) return '30d';
+  return 'old';
+};
+
+// peer-group baseline: 같은 카테고리 + 같은 업로드 연령대의 조회수 중앙값. 표본 부족(<4)이면 null.
+export const computeBaseline = (videos: VideoItem[], target: VideoItem): number | null => {
+  const bucket = ageBucket(target);
+  const peerViews = videos
+    .filter((video) => video.category === target.category && ageBucket(video) === bucket)
+    .map((video) => video.viewCount)
+    .sort((a, b) => a - b);
+  if (peerViews.length < 4) return null;
+  const mid = Math.floor(peerViews.length / 2);
+  return peerViews.length % 2 ? peerViews[mid] : (peerViews[mid - 1] + peerViews[mid]) / 2;
+};
+
+export const vidiqMetrics = (video: VideoItem, baseline?: number | null) => {
   const age = Math.max(uploadedHours(video.uploaded), .5);
   const vph = Math.round(video.viewCount / age);
-  const velocity = velocityNumber(video);
-  const expected = Math.max(180000, (11 - video.rank) * 145000);
-  const outlier = Math.max(1, Math.min(9.9, video.viewCount / expected));
-  const engagement = Math.round((pct(video.retention) * .52) + (pct(video.saveRate) * 2.2) + Math.min(24, shareScore(video) / 18));
-  const score = Math.min(100, Math.round(45 + outlier * 10 + engagement * .35 + Math.min(12, velocity / 8000)));
+  const vel = measuredVelocity(video);
+
+  // outlier: peer-group 중앙값 대비 배수. baseline 없으면 데이터 부족 → null (억지 숫자 금지).
+  const outlier = baseline && baseline > 0 ? Math.max(0.2, Math.min(50, video.viewCount / baseline)) : null;
+
+  // engagement: 실측 like/comment rate 우선. 둘 다 없으면 추정(retention/saveRate) proxy.
+  const likeRate = video.likeCount != null && video.viewCount > 0 ? video.likeCount / video.viewCount : null;
+  const commentRate = video.commentCount != null && video.viewCount > 0 ? video.commentCount / video.viewCount : null;
+  const engagementMeasured = likeRate != null || commentRate != null;
+  const engagement = engagementMeasured
+    ? Math.round(Math.min(100, (likeRate ?? 0) * 1400 + (commentRate ?? 0) * 6000))
+    : Math.round(Math.min(100, (pct(video.retention) * .52) + (pct(video.saveRate) * 2.2)));
+
+  const outlierFactor = outlier ?? 1.5;
+  const score = Math.min(100, Math.round(45 + outlierFactor * 8 + engagement * .3 + Math.min(12, vel.perHour / 8000)));
   const grade = score >= 86 ? 'Viral' : score >= 72 ? 'Strong' : score >= 58 ? 'Rising' : 'Watch';
-  return { score, grade, vph, velocity, outlier: outlier.toFixed(1), comments: commentsScore(video), shares: shareScore(video), engagement };
+  return {
+    score,
+    grade,
+    vph,
+    velocity: vel.perHour,
+    outlier: outlier != null ? outlier.toFixed(1) : null,
+    comments: commentsScore(video),
+    shares: shareScore(video),
+    engagement,
+    measured: { velocity: vel.measured, engagement: engagementMeasured, outlier: outlier != null },
+  };
 };
 
 export const scorecardCurve = (video: VideoItem, window: ScoreWindow) => {

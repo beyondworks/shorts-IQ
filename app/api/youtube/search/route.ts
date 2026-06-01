@@ -1,4 +1,4 @@
-import { dryRunYoutubeImport, importYoutubeShorts } from '../../../../lib/youtube';
+import { dryRunYoutubeImport, importYoutubeShortsWithFallback } from '../../../../lib/youtube';
 import { StoreInputError, StoreNotFoundError } from '../../../../lib/store';
 
 export const dynamic = 'force-dynamic';
@@ -18,7 +18,7 @@ export async function POST(request: Request) {
 
   try {
     if (body.dryRun === true) return Response.json({ dryRun: true, plan: dryRunYoutubeImport(body) });
-    return Response.json(await importYoutubeShorts(body));
+    return Response.json(await importYoutubeShortsWithFallback(body));
   } catch (error) {
     if (error instanceof StoreInputError || error instanceof StoreNotFoundError) {
       return Response.json({ error: error.message }, { status: error.status });

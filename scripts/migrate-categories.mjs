@@ -1,37 +1,15 @@
-// 유튜브 쇼츠 생태계에서 크리에이터가 실제로 쓰는 카테고리 분류 (pint.kr 벤치마킹).
-export const categoryOptions = [
-  '전체',
-  '정치·시사',
-  '경제·주식',
-  '예능 짜깁기',
-  '잡학상식·정보',
-  '게임',
-  '애니·짤형',
-  '아이돌·팬튜브',
-  '연애 이슈',
-  '먹방·푸드',
-  '뷰티·패션',
-  '운동·헬스',
-  '동물·펫',
-  '키즈',
-  'IT·AI·테크',
-  '자동차',
-  '여행',
-  '음악·커버',
-  '스포츠',
-  '인스타·틱톡 짜깁기',
-  'ASMR',
-  '브이로그·일상',
-  '리뷰·언박싱',
-  '공포·미스터리',
-  '자기계발',
+// 일회성: .data/shorts-iq.json의 기존 영상 카테고리를 새 분류 체계로 재매핑한다.
+// seed 영상은 id 매핑, 그 외(youtube/manual)는 inferCategory 규칙(catalog.ts와 동기화)으로 재분류.
+import { readFileSync, writeFileSync, copyFileSync } from 'node:fs';
+
+const categoryOptions = [
+  '전체', '정치·시사', '경제·주식', '예능 짜깁기', '잡학상식·정보', '게임', '애니·짤형',
+  '아이돌·팬튜브', '연애 이슈', '먹방·푸드', '뷰티·패션', '운동·헬스', '동물·펫', '키즈',
+  'IT·AI·테크', '자동차', '여행', '음악·커버', '스포츠', '인스타·틱톡 짜깁기', 'ASMR',
+  '브이로그·일상', '리뷰·언박싱', '공포·미스터리', '자기계발',
 ];
 
-export const templateOptions = ['전체', 'Ranking Hook', '9:16 Full Frame', 'IG Caption Card', 'Before / After', 'Street Interview', 'POV Story', 'Listicle', 'Tutorial Steps', 'Duet/Reaction', 'Product Demo', 'News Explainer', 'Challenge Loop', 'Caption Meme'];
-
-// 제목·채널명 키워드로 콘텐츠 카테고리를 추론한다. 위에서부터 첫 매칭을 사용하므로
-// 더 구체적인 규칙을 앞에 둔다. 매칭이 없으면 가장 포괄적인 '잡학상식·정보'로 분류.
-const categoryRules: { category: string; pattern: RegExp }[] = [
+const categoryRules = [
   { category: 'ASMR', pattern: /asmr|이팅사운드|이팅 사운드/i },
   { category: '정치·시사', pattern: /정치|대통령|국회|선거|시사|논란|속보|여당|야당|정부/ },
   { category: '경제·주식', pattern: /주식|증시|코인|비트코인|부동산|재테크|경제|환율|투자|금리|연봉|월급/ },
@@ -57,10 +35,30 @@ const categoryRules: { category: string; pattern: RegExp }[] = [
   { category: '브이로그·일상', pattern: /브이로그|vlog|일상|데일리/i },
 ];
 
-export const inferCategory = (title: string, channel = ''): string => {
+const inferCategory = (title, channel = '') => {
   const text = `${title} ${channel}`;
-  for (const rule of categoryRules) {
-    if (rule.pattern.test(text)) return rule.category;
-  }
+  for (const rule of categoryRules) if (rule.pattern.test(text)) return rule.category;
   return '잡학상식·정보';
 };
+
+const seedMap = {
+  'vid-001': '먹방·푸드', 'vid-002': '잡학상식·정보', 'vid-003': '아이돌·팬튜브',
+  'vid-004': '브이로그·일상', 'vid-005': 'IT·AI·테크', 'vid-006': '뷰티·패션',
+  'vid-007': '리뷰·언박싱', 'vid-008': '잡학상식·정보', 'vid-009': '운동·헬스', 'vid-010': '경제·주식',
+};
+
+const path = process.env.SHORTS_IQ_DATA_PATH || '.data/shorts-iq.json';
+copyFileSync(path, `${path}.pre-category.bak`);
+const data = JSON.parse(readFileSync(path, 'utf8'));
+let migrated = 0;
+for (const video of data.videos) {
+  const before = video.category;
+  if (seedMap[video.id]) video.category = seedMap[video.id];
+  else if (!categoryOptions.includes(video.category)) video.category = inferCategory(video.title, video.channel);
+  if (video.category !== before) migrated += 1;
+}
+writeFileSync(path, `${JSON.stringify(data, null, 2)}\n`, 'utf8');
+console.log(`migrated ${migrated}/${data.videos.length} videos. backup: ${path}.pre-category.bak`);
+const dist = {};
+for (const v of data.videos) dist[v.category] = (dist[v.category] ?? 0) + 1;
+console.log('category distribution:', dist);

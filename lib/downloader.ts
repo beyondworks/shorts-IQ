@@ -10,6 +10,10 @@ type ProcessOptions = {
 const defaultOutputDir = '.data/clips';
 const commandTimeoutMs = 120_000;
 
+// 동시 실행 중인 다운로드 작업 추적 (호스트 자원 고갈·중복 실행 방지)
+const inFlight = new Set<string>();
+const maxConcurrentDownloads = () => Math.max(1, Number(process.env.SHORTS_IQ_MAX_DOWNLOADS ?? 2));
+
 export const createDownloadProcessPlan = async (clipId: string): Promise<DownloadProcessPlan> => {
   const state = await readState();
   const { clip, video } = getDownloadContext(state, clipId);
@@ -72,15 +76,23 @@ export const processDownloadClip = async (clipId: string, options: ProcessOption
     throw error;
   }
 
+  if (inFlight.has(clipId)) return readState();
+  if (inFlight.size >= maxConcurrentDownloads()) {
+    return updateDownloadStatus(clipId, 'failed', undefined, `동시 다운로드 한도(${maxConcurrentDownloads()})를 초과했습니다. 잠시 후 다시 시도하세요.`);
+  }
+
+  inFlight.add(clipId);
   await mkdir(dirname(plan.outputPath), { recursive: true });
   await updateDownloadStatus(clipId, 'processing');
 
   try {
     await runCommand(plan.tools.ytdlp, plan.commands.ytdlp.slice(1));
     await runCommand(plan.tools.ffmpeg, plan.commands.ffmpeg.slice(1));
-    return updateDownloadStatus(clipId, 'ready', plan.outputPath);
+    return await updateDownloadStatus(clipId, 'ready', plan.outputPath);
   } catch (error) {
-    return updateDownloadStatus(clipId, 'failed', undefined, error instanceof Error ? error.message : '다운로드 작업을 완료하지 못했습니다.');
+    return await updateDownloadStatus(clipId, 'failed', undefined, error instanceof Error ? error.message : '다운로드 작업을 완료하지 못했습니다.');
+  } finally {
+    inFlight.delete(clipId);
   }
 };
 

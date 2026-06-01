@@ -19,6 +19,8 @@ const queryFromSearchParams = (params: URLSearchParams): VideoQuery => ({
   category: params.get('category') ?? undefined,
   duration: params.get('duration') ?? undefined,
   language: params.get('language') ?? undefined,
+  maxSubscribers: params.get('maxSubscribers') ?? undefined,
+  minSubscribers: params.get('minSubscribers') ?? undefined,
   q: params.get('q') ?? undefined,
   query: params.get('query') ?? undefined,
   sort: params.get('sort') ?? undefined,

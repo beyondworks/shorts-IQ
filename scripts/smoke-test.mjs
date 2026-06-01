@@ -6,7 +6,7 @@ import net from "node:net";
 
 const STARTUP_TIMEOUT_MS = 45_000;
 const REQUEST_TIMEOUT_MS = 10_000;
-const HTML_ROUTES = ["/", "/rankings", "/templates", "/search", "/saved", "/folders", "/downloads", "/match", "/videos/vid-001", "/videos/not-in-state"];
+const HTML_ROUTES = ["/", "/rankings", "/search", "/saved", "/folders", "/downloads", "/match", "/videos/vid-001", "/videos/not-in-state"];
 
 const checks = [];
 const externalBaseUrl = Boolean(process.env.SMOKE_BASE_URL);
@@ -111,6 +111,12 @@ async function runApiChecks(origin) {
   });
   await checkJson("GET /api/rankings contract", `${origin}/api/rankings?sort=velocity`, {
     validate: (body) => assertArray(body.videos ?? body, "rankings response"),
+  });
+  await checkJson("GET /api/videos channel-scale + acceleration query", `${origin}/api/videos?maxSubscribers=${encodeURIComponent("10만")}&sort=${encodeURIComponent("급가속순")}`, {
+    validate: (body) => assertArray(body.videos ?? body, "videos response"),
+  });
+  await checkJson("GET /api/videos new category filter contract", `${origin}/api/videos?category=${encodeURIComponent("잡학상식·정보")}`, {
+    validate: (body) => assertArray(body.videos ?? body, "videos response"),
   });
   await checkJson("POST /api/youtube/search dry-run returns search plan", `${origin}/api/youtube/search`, {
     method: "POST",

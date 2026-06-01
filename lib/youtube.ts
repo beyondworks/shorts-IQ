@@ -1,5 +1,6 @@
 import { formatCompact } from './metrics';
-import { StoreInputError, upsertVideos } from './store';
+import { inferCategory } from './catalog';
+import { readState, StoreInputError, upsertVideos } from './store';
 import type { AppState, VideoItem } from './types';
 
 export type YoutubeImportPayload = {
@@ -41,6 +42,7 @@ type YoutubeVideosResponse = {
 type YoutubeVideoResource = {
   id?: string;
   snippet?: {
+    channelId?: string;
     channelTitle?: string;
     publishedAt?: string;
     thumbnails?: Record<string, { url?: string }>;
@@ -58,6 +60,16 @@ type YoutubeVideoResource = {
 
 const searchEndpoint = 'https://www.googleapis.com/youtube/v3/search';
 const videosEndpoint = 'https://www.googleapis.com/youtube/v3/videos';
+const channelsEndpoint = 'https://www.googleapis.com/youtube/v3/channels';
+
+type ChannelStats = { subscriberCount?: number; channelPublishedAt?: string };
+type YoutubeChannelsResponse = {
+  items?: {
+    id?: string;
+    snippet?: { publishedAt?: string };
+    statistics?: { subscriberCount?: string; hiddenSubscriberCount?: boolean };
+  }[];
+};
 
 export const buildYoutubeImportPlan = (payload: YoutubeImportPayload): YoutubeImportPlan => {
   const query = payload.query?.trim();
@@ -108,8 +120,9 @@ export const importYoutubeShorts = async (payload: YoutubeImportPayload): Promis
     part: 'snippet,statistics,contentDetails',
   });
   const videosResponse = await fetchJson<YoutubeVideosResponse>(`${videosEndpoint}?${detailParams.toString()}`, 'YouTube videos');
+  const channelStats = await fetchChannelStats(videosResponse.items ?? [], key);
   const videos = (videosResponse.items ?? [])
-    .map((item, index) => youtubeResourceToVideo(item, index, payload))
+    .map((item, index) => youtubeResourceToVideo(item, index, payload, channelStats))
     .filter((video): video is VideoItem => Boolean(video))
     .filter((video) => durationToSeconds(video.duration) <= 60);
 
@@ -117,9 +130,49 @@ export const importYoutubeShorts = async (payload: YoutubeImportPayload): Promis
   return upsertVideos(videos);
 };
 
+// 채널 통계(구독자·개설일)를 1회 배치 조회. 실패해도 영상 수집은 계속(부분 degradation).
+const fetchChannelStats = async (items: YoutubeVideoResource[], key: string): Promise<Map<string, ChannelStats>> => {
+  const channelIds = Array.from(new Set(items.map((item) => item.snippet?.channelId).filter(Boolean) as string[]));
+  if (channelIds.length === 0) return new Map();
+  try {
+    const params = new URLSearchParams({ id: channelIds.join(','), key, part: 'snippet,statistics' });
+    const response = await fetchJson<YoutubeChannelsResponse>(`${channelsEndpoint}?${params.toString()}`, 'YouTube channels');
+    const map = new Map<string, ChannelStats>();
+    for (const channel of response.items ?? []) {
+      if (!channel.id) continue;
+      const subscriberCount = channel.statistics?.hiddenSubscriberCount
+        ? undefined
+        : Number(channel.statistics?.subscriberCount ?? NaN) || undefined;
+      map.set(channel.id, { subscriberCount, channelPublishedAt: channel.snippet?.publishedAt });
+    }
+    return map;
+  } catch {
+    return new Map();
+  }
+};
+
+// 외부 API 실패(키 미설정 제외) 시 마지막 수집한 youtube-api 캐시를 반환하는 graceful fallback.
+export const importYoutubeShortsWithFallback = async (
+  payload: YoutubeImportPayload,
+): Promise<AppState & { degraded?: boolean; degradedReason?: string }> => {
+  try {
+    return await importYoutubeShorts(payload);
+  } catch (error) {
+    // 키 미설정은 사용자가 설정해야 하는 사항 — fallback 대상이 아니라 그대로 전파.
+    if (error instanceof StoreInputError && /API_KEY|required/i.test(error.message)) throw error;
+    // 쿼터 초과·네트워크 실패 등은 마지막 수집 상태를 그대로 보여줘 화면이 비지 않게 한다.
+    const cached = await readState();
+    return {
+      ...cached,
+      degraded: true,
+      degradedReason: error instanceof Error ? error.message : 'YouTube 수집에 실패했습니다.',
+    };
+  }
+};
+
 export const dryRunYoutubeImport = (payload: YoutubeImportPayload) => buildYoutubeImportPlan(payload);
 
-const youtubeResourceToVideo = (item: YoutubeVideoResource, index: number, payload: YoutubeImportPayload): VideoItem | null => {
+const youtubeResourceToVideo = (item: YoutubeVideoResource, index: number, payload: YoutubeImportPayload, channelStats: Map<string, ChannelStats> = new Map()): VideoItem | null => {
   if (!item.id || !item.snippet) return null;
   const now = new Date().toISOString();
   const publishedAt = item.snippet.publishedAt ?? now;
@@ -138,7 +191,7 @@ const youtubeResourceToVideo = (item: YoutubeVideoResource, index: number, paylo
     title: item.snippet.title ?? 'Untitled YouTube Shorts',
     channel: item.snippet.channelTitle ?? 'Unknown channel',
     template: payload.template?.trim() || inferTemplate(item.snippet.title ?? ''),
-    category: payload.category?.trim() || 'YouTube 수집',
+    category: payload.category?.trim() || inferCategory(item.snippet.title ?? '', item.snippet.channelTitle ?? ''),
     uploaded: uploadedLabel(publishedAt),
     views: formatCompact(viewCount),
     viewCount,
@@ -146,7 +199,7 @@ const youtubeResourceToVideo = (item: YoutubeVideoResource, index: number, paylo
     saved: true,
     folder: 'YouTube 수집',
     gradient: gradientFor(item.id),
-    hook: `YouTube Data API 수집: ${payload.query?.trim() || 'keyword'} 검색 결과에서 조회수, 길이, 게시일을 보강했습니다.`,
+    hook: `YouTube Data API 수집: ${payload.query?.trim() || 'keyword'} 검색 결과. 조회수·좋아요·댓글은 실측, 시청유지·저장률은 공개 API 미제공으로 추정값입니다.`,
     retention,
     saveRate,
     duration,
@@ -158,6 +211,12 @@ const youtubeResourceToVideo = (item: YoutubeVideoResource, index: number, paylo
     sourceKind: 'youtube-api',
     language: normalizeLanguage(payload.language),
     viewsHistory: [{ at: now, views: viewCount }],
+    likeCount: likes,
+    commentCount: comments,
+    channelId: item.snippet.channelId,
+    subscriberCount: channelStats.get(item.snippet.channelId ?? '')?.subscriberCount,
+    channelPublishedAt: channelStats.get(item.snippet.channelId ?? '')?.channelPublishedAt,
+    metricsProxy: true,
   };
 };
 

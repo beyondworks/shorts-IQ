@@ -1,6 +1,6 @@
-import { mkdir, readFile, writeFile } from 'fs/promises';
+import { mkdir, readFile, rename, writeFile } from 'fs/promises';
 import path from 'node:path';
-import { commentsScore, durationSeconds, formatCompact, pct, shareScore, uploadedHours, velocityNumber } from './metrics';
+import { commentsScore, durationSeconds, formatCompact, measuredVelocity, pct, shareScore, uploadedHours, velocityNumber } from './metrics';
 import { createSeedState } from './seed';
 import type { AppState, DownloadClip, FolderCollection, FolderItem, MatchReport, PolicyCheck, TemplatePattern, VideoItem } from './types';
 
@@ -24,6 +24,8 @@ export type VideoQuery = {
   category?: string;
   duration?: string;
   language?: string;
+  maxSubscribers?: string;
+  minSubscribers?: string;
   q?: string;
   query?: string;
   sort?: string;
@@ -52,12 +54,24 @@ export const readVisibleState = async (): Promise<AppState> => {
   };
 };
 
+// 모든 변이(read-modify-write)를 직렬화해 동시 요청 시 lost update를 막는다.
+let writeChain: Promise<unknown> = Promise.resolve();
+
+export const withMutation = <T>(task: () => Promise<T>): Promise<T> => {
+  const run = writeChain.then(task, task);
+  writeChain = run.then(() => undefined, () => undefined);
+  return run;
+};
+
 export const writeState = async (state: AppState): Promise<AppState> => {
   const nextState = hydrateState(state);
   const dataPath = getDataPath();
   const dataDir = dirname(dataPath);
   await mkdir(/*turbopackIgnore: true*/ dataDir, { recursive: true });
-  await writeFile(/*turbopackIgnore: true*/ dataPath, `${JSON.stringify(nextState, null, 2)}\n`, 'utf8');
+  // atomic write: temp 파일에 쓴 뒤 rename으로 교체해 부분 쓰기 손상을 방지한다.
+  const tmpPath = `${dataPath}.${process.pid}.${Date.now().toString(36)}.tmp`;
+  await writeFile(/*turbopackIgnore: true*/ tmpPath, `${JSON.stringify(nextState, null, 2)}\n`, 'utf8');
+  await rename(/*turbopackIgnore: true*/ tmpPath, dataPath);
   return nextState;
 };
 
@@ -104,7 +118,7 @@ export const listMatchReports = async (): Promise<MatchReport[]> => {
   return state.matchReports;
 };
 
-export const ingestVideo = async (payload: IngestPayload): Promise<AppState> => {
+export const ingestVideo = async (payload: IngestPayload): Promise<AppState> => withMutation(async () => {
   const sourceUrl = payload.sourceUrl?.trim();
   const title = payload.title?.trim();
   if (!sourceUrl && !title) throw new StoreInputError('sourceUrl or title is required');
@@ -137,9 +151,9 @@ export const ingestVideo = async (payload: IngestPayload): Promise<AppState> => 
   state.lastSyncedAt = now;
   await writeState(state);
   return readState();
-};
+});
 
-export const upsertVideos = async (videos: VideoItem[]): Promise<AppState> => {
+export const upsertVideos = async (videos: VideoItem[]): Promise<AppState> => withMutation(async () => {
   if (videos.length === 0) throw new StoreInputError('videos are required');
 
   const state = await readState();
@@ -171,17 +185,17 @@ export const upsertVideos = async (videos: VideoItem[]): Promise<AppState> => {
   state.lastSyncedAt = now;
   await writeState(state);
   return readState();
-};
+});
 
-export const updateVideoSaved = async (id: string): Promise<AppState> => {
+export const updateVideoSaved = async (id: string): Promise<AppState> => withMutation(async () => {
   const state = await readState();
   const video = findVideo(state, id);
   video.saved = !video.saved;
   if (!video.saved) video.folder = '';
   return writeState(state);
-};
+});
 
-export const updateDownloadStatus = async (clipId: string, status: DownloadClip['status'], outputPath?: string, error?: string): Promise<AppState> => {
+export const updateDownloadStatus = async (clipId: string, status: DownloadClip['status'], outputPath?: string, error?: string): Promise<AppState> => withMutation(async () => {
   if (!['queued', 'processing', 'ready', 'failed'].includes(status)) {
     throw new StoreInputError('status must be queued, processing, ready, or failed');
   }
@@ -192,18 +206,18 @@ export const updateDownloadStatus = async (clipId: string, status: DownloadClip[
   clip.outputPath = status === 'ready' ? outputPath || `local://clips/${clip.id}.mp4` : undefined;
   clip.error = status === 'failed' ? error || '다운로드 작업을 완료하지 못했습니다.' : undefined;
   return writeState(state);
-};
+});
 
-export const assignVideoFolder = async (id: string, folder: string): Promise<AppState> => {
+export const assignVideoFolder = async (id: string, folder: string): Promise<AppState> => withMutation(async () => {
   const state = await readState();
   const video = findVideo(state, id);
   video.saved = true;
   video.folder = folder;
   ensureFolder(state, folder);
   return writeState(state);
-};
+});
 
-export const createDownload = async (videoId: string, startSec: number, endSec: number, policyAccepted = false): Promise<AppState> => {
+export const createDownload = async (videoId: string, startSec: number, endSec: number, policyAccepted = false): Promise<AppState> => withMutation(async () => {
   if (!Number.isFinite(startSec) || !Number.isFinite(endSec) || startSec < 0 || endSec <= startSec) {
     throw new StoreInputError('startSec and endSec must be valid clip bounds');
   }
@@ -245,9 +259,9 @@ export const createDownload = async (videoId: string, startSec: number, endSec: 
   ensureFolder(state, '다운로드 후보');
 
   return writeState(state);
-};
+});
 
-export const createMatchReport = async (payload: MatchReportPayload = {}): Promise<AppState> => {
+export const createMatchReport = async (payload: MatchReportPayload = {}): Promise<AppState> => withMutation(async () => {
   const state = await readState();
   const sourceVideo = payload.sourceVideoId || payload.videoId
     ? findVideo(state, payload.sourceVideoId || payload.videoId || '')
@@ -287,9 +301,9 @@ export const createMatchReport = async (payload: MatchReportPayload = {}): Promi
 
   state.matchReports = [report, ...state.matchReports].slice(0, 20);
   return writeState(state);
-};
+});
 
-export const simulateLiveSync = async (): Promise<AppState> => {
+export const simulateLiveSync = async (): Promise<AppState> => withMutation(async () => {
   const state = await readState();
   const syncedAt = new Date().toISOString();
   state.videos = state.videos.map((video) => {
@@ -309,7 +323,7 @@ export const simulateLiveSync = async (): Promise<AppState> => {
   });
   state.lastSyncedAt = syncedAt;
   return writeState(state);
-};
+});
 
 export class StoreInputError extends Error {
   status = 400;
@@ -567,6 +581,7 @@ const filterVideos = (videos: VideoItem[], query: VideoQuery) => {
     .filter((video) => matchesViews(video, query.views))
     .filter((video) => matchesDuration(video, query.duration))
     .filter((video) => matchesLanguage(video, query.language))
+    .filter((video) => matchesSubscribers(video, query.maxSubscribers, query.minSubscribers))
     .filter((video) => !search || `${video.title} ${video.channel} ${video.template} ${video.category}`.toLowerCase().includes(search))
     .sort((a, b) => compareVideos(a, b, query.sort)));
 };
@@ -574,6 +589,24 @@ const filterVideos = (videos: VideoItem[], query: VideoQuery) => {
 const matchesLanguage = (video: VideoItem, language?: string) => {
   if (isAllValue(language)) return true;
   return (video.language ?? '한국어') === language;
+};
+
+// 채널 규모 필터 (대형채널 제외 = 작은 채널 outlier 발굴). 구독자 수 미상이면 통과.
+const matchesSubscribers = (video: VideoItem, max?: string, min?: string) => {
+  if (video.subscriberCount == null) return true;
+  const maxValue = parseSubscriberBound(max);
+  const minValue = parseSubscriberBound(min);
+  if (maxValue != null && video.subscriberCount > maxValue) return false;
+  if (minValue != null && video.subscriberCount < minValue) return false;
+  return true;
+};
+
+const parseSubscriberBound = (label?: string) => {
+  if (!label || isAllValue(label)) return null;
+  const number = Number(label.match(/(\d+(?:\.\d+)?)/)?.[1] ?? NaN);
+  if (!Number.isFinite(number)) return null;
+  const unit = /만/.test(label) ? 10000 : /천/.test(label) ? 1000 : 1;
+  return number * unit;
 };
 
 const isAllValue = (value?: string) => !value || value === '전체' || value.startsWith('전체 ') || value === 'All' || value.startsWith('All ');
@@ -630,6 +663,9 @@ const compareVideos = (a: VideoItem, b: VideoItem, sort?: string) => {
     case 'shares':
     case '공유순':
       return shareScore(b) - shareScore(a);
+    case 'acceleration':
+    case '급가속순':
+      return measuredVelocity(b).perHour - measuredVelocity(a).perHour;
     case 'velocity':
     case '급상승순':
     default:

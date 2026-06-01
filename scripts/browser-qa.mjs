@@ -100,12 +100,15 @@ async function runDiscoveryFlow(page) {
 
   record("rankings filter syncs language to URL", page.url().includes("language=%EC%98%81%EC%96%B4"), page.url());
   record("rankings empty state reflects server-filtered results", await page.getByText("조건이 너무 좁습니다").isVisible());
+  record("template explorer nav removed", (await page.getByRole("link", { name: "Template Explorer" }).count()) === 0);
+  record("channel-scale filter present (pint benchmark)", (await page.getByRole("button", { name: /채널규모/ }).count()) > 0);
   await assertNoHorizontalOverflow(page, "rankings desktop overflow");
 }
 
 async function runReferenceOpsFlow(page) {
   await page.goto(`${baseUrl}/videos/vid-001`);
   await page.getByText("/api/videos/vid-001", { exact: true }).waitFor();
+  record("measurement honesty badge present (측정/추정/표본 부족)", (await page.getByText(/추정|측정|표본 부족/).count()) > 0);
   const detailActions = page.locator(".detailActions");
   await detailActions.getByRole("button", { name: /폴더 저장/ }).click();
   await page.getByRole("button", { name: /다운로드 후보/ }).click();
@@ -182,7 +185,7 @@ async function runMobileOverflowFlow(page) {
   const videosResponse = await page.request.get(`${baseUrl}/api/videos`);
   const videosBody = await videosResponse.json().catch(() => ({}));
   const firstVisibleVideoId = videosBody.videos?.[0]?.id || "vid-001";
-  for (const route of ["/", "/rankings", "/templates", "/search", "/saved", "/folders", "/downloads", "/match", `/videos/${firstVisibleVideoId}`]) {
+  for (const route of ["/", "/rankings", "/search", "/saved", "/folders", "/downloads", "/match", `/videos/${firstVisibleVideoId}`]) {
     await page.goto(`${baseUrl}${route}`);
     await page.waitForLoadState("networkidle");
     await assertNoHorizontalOverflow(page, `${route} mobile overflow`);
