@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { createPortal } from 'react-dom';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -99,6 +100,7 @@ export function PrototypeApp({ page = 'dashboard', videoId }: { page?: PageKind;
   const [folderModal, setFolderModal] = useState(false);
   const [downloadModal, setDownloadModal] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [rankingsTab, setRankingsTab] = useState<'videos' | 'channels'>('videos');
   const [clipStart, setClipStart] = useState(3);
   const [clipEnd, setClipEnd] = useState(31);
   const [loading, setLoading] = useState(true);
@@ -280,11 +282,27 @@ export function PrototypeApp({ page = 'dashboard', videoId }: { page?: PageKind;
     <main className="shell">
       <Sidebar pathname={pathname} videoCount={videoState.length} lastSyncedAt={appState.lastSyncedAt} />
       <section className="workspace">
-        <Topbar query={query} setQuery={setQuery} advancedOpen={advancedOpen} setAdvancedOpen={setAdvancedOpen} onSync={runSync} syncing={pendingAction === 'sync'} actionMessage={actionMessage} apiError={apiError} />
+        <StickyHeader
+          showFilterRail={page === 'dashboard' || (page === 'rankings' && rankingsTab === 'videos')}
+          filters={filters}
+          setFilters={setFilters}
+          query={query}
+          setQuery={setQuery}
+          advancedOpen={advancedOpen}
+          setAdvancedOpen={setAdvancedOpen}
+          onSync={runSync}
+          syncing={pendingAction === 'sync'}
+          actionMessage={actionMessage}
+          apiError={apiError}
+          activeCategory={activeCategory}
+          activeTemplate={activeTemplate}
+          applyPreset={applyPreset}
+          setActiveCategory={setActiveCategory}
+          setActiveTemplate={setActiveTemplate}
+        />
         {pathname !== '/' && <BackButton fallback="/" label="이전 페이지" />}
-        {advancedOpen && <DiscoveryPanel activeCategory={activeCategory} activeTemplate={activeTemplate} applyPreset={applyPreset} setActiveCategory={setActiveCategory} setActiveTemplate={setActiveTemplate} />}
         {page === 'dashboard' && <DashboardPage selected={selected} peers={videoState} filteredVideos={filteredVideos} activeCategory={activeCategory} activeTemplate={activeTemplate} activeFilter={activeFilter} serverQueryUrl={serverQueryUrl} discoveryLoading={discoveryLoading} discoveryError={discoveryError} filters={filters} setFilters={setFilters} savedCount={savedCount} downloads={downloads} templates={templates} totalVideos={videoState.length} folderStats={folderStats} resetDiscovery={resetDiscovery} setActiveTemplate={setActiveTemplate} setSelectedId={setSelectedId} toggleSaved={toggleSaved} setFolderModal={setFolderModal} setDownloadModal={setDownloadModal} clipStart={clipStart} clipEnd={clipEnd} setClipStart={setClipStart} setClipEnd={setClipEnd} assignFolder={assignFolder} pendingAction={pendingAction} onIngest={ingestReference} ingesting={pendingAction === 'ingest'} onYoutubeImport={importYoutubeKeyword} youtubeImporting={pendingAction === 'youtube'} />}
-        {page === 'rankings' && <RankingsPage videos={filteredVideos} activeCategory={activeCategory} activeTemplate={activeTemplate} activeFilter={activeFilter} serverQueryUrl={serverQueryUrl} discoveryLoading={discoveryLoading} discoveryError={discoveryError} filters={filters} setFilters={setFilters} setSelectedId={setSelectedId} toggleSaved={toggleSaved} setDownloadModal={setDownloadModal} setFolderModal={setFolderModal} pendingAction={pendingAction} />}
+        {page === 'rankings' && <RankingsPage videos={filteredVideos} activeCategory={activeCategory} activeTemplate={activeTemplate} activeFilter={activeFilter} serverQueryUrl={serverQueryUrl} discoveryLoading={discoveryLoading} discoveryError={discoveryError} filters={filters} setFilters={setFilters} setSelectedId={setSelectedId} toggleSaved={toggleSaved} setDownloadModal={setDownloadModal} setFolderModal={setFolderModal} pendingAction={pendingAction} tab={rankingsTab} setTab={setRankingsTab} />}
         {page === 'saved' && <SavedPage videos={videoState.filter((v) => v.saved)} setSelectedId={setSelectedId} toggleSaved={toggleSaved} setDownloadModal={setDownloadModal} setFolderModal={setFolderModal} />}
         {page === 'folders' && <FoldersPage folderStats={folderStats} videos={videoState} downloads={downloads} setSelectedId={setSelectedId} toggleSaved={toggleSaved} setDownloadModal={setDownloadModal} setFolderModal={setFolderModal} />}
         {page === 'match' && <MatchGuardPage selected={selected} report={matchReports[0]} onCreateReport={createMatchReport} creating={pendingAction === 'match'} />}
@@ -317,6 +335,32 @@ function BackButton({ fallback = '/', label = '이전 페이지' }: { fallback?:
 function Topbar({ query, setQuery, advancedOpen, setAdvancedOpen, onSync, syncing, actionMessage, apiError }: { query: string; setQuery: (v: string) => void; advancedOpen: boolean; setAdvancedOpen: (v: boolean) => void; onSync: () => void; syncing: boolean; actionMessage: string; apiError: string | null }) {
   return <header className="topbar"><div className="searchBox"><Search size={16} /><input aria-label="영상 검색" placeholder="영상, 채널, 템플릿, 키워드 검색..." value={query} onChange={(event) => setQuery(event.target.value)} /><kbd>⌘K</kbd></div><button className={`ghost ${advancedOpen ? 'selected' : ''}`} onClick={() => setAdvancedOpen(!advancedOpen)}><Filter size={14} /> Find videos</button><button className="primary" onClick={onSync} disabled={syncing}><Activity size={14} /> {syncing ? 'Syncing' : 'Live sync'}</button><div className={`topbarStatus ${apiError ? 'error' : ''}`} aria-live="polite" {...(apiError ? { role: 'alert' } : {})}>{apiError ? 'API 오류' : actionMessage}</div></header>;
 }
+// 검색창(.topbar) + (열렸을 때)DiscoveryPanel + (해당 페이지에서만)FilterRail을 하나의 sticky 컨테이너로 묶어
+// 스크롤 시 통째로 상단에 고정한다. DiscoveryPanel/FilterRail이 빠지면 헤더 높이가 자동으로 줄어든다.
+function StickyHeader({ showFilterRail, filters, setFilters, query, setQuery, advancedOpen, setAdvancedOpen, onSync, syncing, actionMessage, apiError, activeCategory, activeTemplate, applyPreset, setActiveCategory, setActiveTemplate }: {
+  showFilterRail: boolean;
+  filters: DiscoveryFilters;
+  setFilters: (v: DiscoveryFilters) => void;
+  query: string;
+  setQuery: (v: string) => void;
+  advancedOpen: boolean;
+  setAdvancedOpen: (v: boolean) => void;
+  onSync: () => void;
+  syncing: boolean;
+  actionMessage: string;
+  apiError: string | null;
+  activeCategory: string;
+  activeTemplate: string;
+  applyPreset: (p: typeof intentPresets[number]) => void;
+  setActiveCategory: (v: string) => void;
+  setActiveTemplate: (v: string) => void;
+}) {
+  return <div className="stickyHeader">
+    <Topbar query={query} setQuery={setQuery} advancedOpen={advancedOpen} setAdvancedOpen={setAdvancedOpen} onSync={onSync} syncing={syncing} actionMessage={actionMessage} apiError={apiError} />
+    {advancedOpen && <DiscoveryPanel activeCategory={activeCategory} activeTemplate={activeTemplate} applyPreset={applyPreset} setActiveCategory={setActiveCategory} setActiveTemplate={setActiveTemplate} />}
+    {showFilterRail && <FilterRail filters={filters} setFilters={setFilters} />}
+  </div>;
+}
 function DiscoveryPanel({ activeCategory, activeTemplate, applyPreset, setActiveCategory, setActiveTemplate }: { activeCategory: string; activeTemplate: string; applyPreset: (p: typeof intentPresets[number]) => void; setActiveCategory: (v: string) => void; setActiveTemplate: (v: string) => void }) {
   return <section className="advancedPanel discoveryPanel" aria-label="Advanced filter panel"><div className="discoveryIntro"><span className="miniLabel">DISCOVERY BUILDER</span><strong>무엇을 찾고 싶은지 먼저 고르면, 카테고리와 템플릿을 좁혀줍니다.</strong><p>기본 랭킹은 항상 전체 영상 기준 실시간 인기입니다. 아래 조건은 “찾기/분석”용 필터입니다.</p></div><div className="intentGrid">{intentPresets.map((preset) => <button key={preset.title} onClick={() => applyPreset(preset)}><b>{preset.title}</b><span>{preset.desc}</span></button>)}</div><div className="taxonomyBlock"><span>카테고리</span><div>{categoryOptions.map((cat) => <button className={activeCategory === cat ? 'activeChip' : ''} key={cat} onClick={() => setActiveCategory(cat)}>{cat}</button>)}</div></div><div className="taxonomyBlock"><span>템플릿</span><div>{templateOptions.map((tpl) => <button className={activeTemplate === tpl ? 'activeChip' : ''} key={tpl} onClick={() => setActiveTemplate(tpl)}>{tpl}</button>)}</div></div></section>;
 }
@@ -324,7 +368,7 @@ function Hero({ eyebrow, title, desc, stats }: { eyebrow: string; title: string;
   return <div className="dashboardHeader"><div><div className="eyebrow"><span /> {eyebrow}</div><h1>{title}</h1><p>{desc}</p></div><div className="headerStats">{(stats ?? [['+31.4%', 'avg velocity'], ['4.2M', 'live views']]).map(([n, l]) => <div key={l}><b>{n}</b><span>{l}</span></div>)}</div></div>;
 }
 function DashboardPage(props: any) {
-  return <><Hero eyebrow="REAL-TIME SHORTS RADAR" title="전체 숏츠에서 지금 뜨는 영상과 템플릿을 먼저 보여줍니다." desc="카테고리 안에 갇힌 랭킹이 아니라, 전체 실시간 인기 영상 → 템플릿 신호 → 저장/다운로드 후보로 이어지는 리서치 흐름." /><section className="kpiGrid" aria-label="Realtime metrics"><article className="kpi"><span>수집 영상</span><strong>{props.totalVideos.toLocaleString()}</strong><em>from API state</em></article><article className="kpi"><span>감지 템플릿</span><strong>{props.templates.length}</strong><em>{templateOptions.length - 1} taxonomy types</em></article><article className="kpi"><span>북마크</span><strong>{props.savedCount}</strong><em>{props.folderStats.length} folders</em></article><article className="kpi"><span>다운로드 큐</span><strong>{props.downloads.length}</strong><em>{props.downloads.filter((clip: DownloadClip) => clip.status === 'ready').length} clips ready</em></article></section><DashboardIngest activeCategory={props.activeCategory} activeTemplate={props.activeTemplate} onIngest={props.onIngest} ingesting={props.ingesting} onYoutubeImport={props.onYoutubeImport} youtubeImporting={props.youtubeImporting} /><FilterRail filters={props.filters} setFilters={props.setFilters} /><section className="contentGrid"><RankingPanel {...props} /><DetailPanel {...props} /></section></>;
+  return <><Hero eyebrow="REAL-TIME SHORTS RADAR" title="전체 숏츠에서 지금 뜨는 영상과 템플릿을 먼저 보여줍니다." desc="카테고리 안에 갇힌 랭킹이 아니라, 전체 실시간 인기 영상 → 템플릿 신호 → 저장/다운로드 후보로 이어지는 리서치 흐름." /><section className="kpiGrid" aria-label="Realtime metrics"><article className="kpi"><span>수집 영상</span><strong>{props.totalVideos.toLocaleString()}</strong><em>from API state</em></article><article className="kpi"><span>감지 템플릿</span><strong>{props.templates.length}</strong><em>{templateOptions.length - 1} taxonomy types</em></article><article className="kpi"><span>북마크</span><strong>{props.savedCount}</strong><em>{props.folderStats.length} folders</em></article><article className="kpi"><span>다운로드 큐</span><strong>{props.downloads.length}</strong><em>{props.downloads.filter((clip: DownloadClip) => clip.status === 'ready').length} clips ready</em></article></section><DashboardIngest activeCategory={props.activeCategory} activeTemplate={props.activeTemplate} onIngest={props.onIngest} ingesting={props.ingesting} onYoutubeImport={props.onYoutubeImport} youtubeImporting={props.youtubeImporting} /><section className="contentGrid"><RankingPanel {...props} /><DetailPanel {...props} /></section></>;
 }
 function DashboardIngest({ activeCategory, activeTemplate, onIngest, ingesting, onYoutubeImport, youtubeImporting }: { activeCategory: string; activeTemplate: string; onIngest: (payload: { category?: string; language?: string; sourceUrl?: string; template?: string; title?: string }) => Promise<boolean>; ingesting: boolean; onYoutubeImport: (payload: { category?: string; language?: string; query?: string; template?: string }) => Promise<boolean>; youtubeImporting: boolean }) {
   const [sourceUrl, setSourceUrl] = useState('');
@@ -416,14 +460,14 @@ function VidiqInsightPanel({ selected, peers = [], compact = false }: { selected
 }
 function DetailPanel({ selected, peers = [], folderStats, clipStart, clipEnd, setClipStart, setClipEnd, setDownloadModal, assignFolder }: any) { return <aside className="detailPanel"><div className="selectedPreview"><div className="phoneFrame"><VideoPreview video={selected} /></div><div><span className="miniLabel">SELECTED VIDEO</span><h2>{selected.title}</h2><p>{selected.template} · {selected.category} · {selected.uploaded}</p></div></div><VidiqInsightPanel selected={selected} peers={peers} /><div className="clipBox"><div className="boxHead"><Download size={14} /> 구간 선택 다운로드</div><div className="timeline"><span style={{ left: `${clipStart * 2}%` }} /><span style={{ left: `${clipEnd * 2}%` }} /><div style={{ left: `${clipStart * 2}%`, right: `${100 - clipEnd * 2}%` }} /></div><div className="timeInputs"><button onClick={() => setClipStart(3)}>00:{String(clipStart).padStart(2, '0')}</button><button onClick={() => setClipEnd(31)}>00:{String(clipEnd).padStart(2, '0')}</button><button onClick={() => setDownloadModal(true)}>{clipEnd - clipStart}s clip</button></div></div><div className="folderBox"><div className="boxHead"><Archive size={14} /> Raindrop-style folders</div>{folderStats.map((folder: any) => <button className={`folderItem ${selected.folder === folder.name ? 'currentFolder' : ''}`} key={folder.name} onClick={() => assignFolder(folder.name)}><i style={{ background: folder.color }} /><span>{folder.name}</span><em>{folder.count}</em></button>)}</div></aside>; }
 function RankingsPage(props: any) {
-  const [tab, setTab] = useState<'videos' | 'channels'>('videos');
+  const { tab, setTab } = props;
   return <><Hero eyebrow="TREND RANKINGS" title="실시간 인기 영상과 채널을 한 화면에서." desc="전체 영상 기준 실시간 인기 랭킹과, 그 영상을 만든 채널 단위 성장 랭킹을 탭으로 나눠 봅니다." stats={[[String(props.videos.length), 'visible videos'], ['+78.1K/h', 'top velocity']]} />
     <section className="rankTabs" aria-label="랭킹 탭">
       <button className={tab === 'videos' ? 'active' : ''} onClick={() => setTab('videos')}>인기 영상</button>
       <button className={tab === 'channels' ? 'active' : ''} onClick={() => setTab('channels')}>인기 채널</button>
     </section>
     {tab === 'videos'
-      ? <><FilterRail filters={props.filters} setFilters={props.setFilters} /><section className="widePanel"><RankingPanel filteredVideos={props.videos} {...props} /></section></>
+      ? <section className="widePanel"><RankingPanel filteredVideos={props.videos} {...props} /></section>
       : <ChannelsTab onPickVideo={(id) => { props.setSelectedId(id); setTab('videos'); }} />}
   </>;
 }
@@ -488,10 +532,51 @@ const youtubeIdFromUrl = (sourceUrl?: string) => {
   }
 };
 const previewLabel = (video: VideoItem) => video.sourceKind === 'youtube-api' ? 'YouTube API' : video.sourceKind === 'youtube-oembed' ? 'oEmbed' : video.sourceKind === 'manual' ? 'Manual' : 'Seed';
+// 카드 크기. 9:16 영상(폭 width) + 하단 메타 영역까지 포함한 대략 높이로 화면 밖 clamp 계산.
+const HOVER_CARD_WIDTH = 300;
+const HOVER_CARD_HEIGHT = 470;
+const HOVER_CARD_GAP = 14;
+// pint.kr식 floating 큰 미리보기 카드. 행/썸네일 우측에 떠서 9:16 영상 + 메타를 보여준다.
+// .thumb / .rankPanel의 overflow:hidden에 잘리지 않도록 body 포털로 렌더하고 position:fixed로 viewport 기준 배치.
+function HoverPreviewCard({ video, youtubeId, anchor }: { video: VideoItem; youtubeId: string; anchor: DOMRect }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+  if (!mounted || typeof document === 'undefined') return null;
+  // 기본은 앵커(썸네일) 우측. 우측 공간이 부족하면 좌측으로 뒤집고, 상하로 화면 밖을 넘지 않게 clamp.
+  const spaceRight = window.innerWidth - anchor.right;
+  const left = spaceRight >= HOVER_CARD_WIDTH + HOVER_CARD_GAP
+    ? anchor.right + HOVER_CARD_GAP
+    : Math.max(HOVER_CARD_GAP, anchor.left - HOVER_CARD_WIDTH - HOVER_CARD_GAP);
+  const rawTop = anchor.top + anchor.height / 2 - HOVER_CARD_HEIGHT / 2;
+  const top = Math.min(Math.max(HOVER_CARD_GAP, rawTop), window.innerHeight - HOVER_CARD_HEIGHT - HOVER_CARD_GAP);
+  const shortsHref = `https://www.youtube.com/shorts/${youtubeId}`;
+  return createPortal(
+    <div className="hoverPreviewCard" style={{ left, top, width: HOVER_CARD_WIDTH }} role="dialog" aria-label={`${video.title} 미리보기`}>
+      <div className="hoverPreviewVideo">
+        <iframe title={`${video.title} preview`} src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${youtubeId}&playsinline=1`} frameBorder={0} allow="autoplay" />
+      </div>
+      <div className="hoverPreviewMeta">
+        <h4>{video.title}</h4>
+        <p>{video.channel}</p>
+        <div className="hoverPreviewStats"><span>조회 {video.views}</span><span>{video.uploaded}</span></div>
+        <div className="hoverPreviewActions">
+          <span className={video.saved ? 'saved' : ''} title="저장"><Star size={13} /></span>
+          <span title="분석"><BarChart3 size={13} /></span>
+          <a href={shortsHref} target="_blank" rel="noreferrer" title="원본 열기"><Play size={13} /></a>
+        </div>
+      </div>
+    </div>,
+    document.body,
+  );
+}
 function VideoThumb({ video }: { video: VideoItem }) {
   const [hover, setHover] = useState(false);
+  const [anchor, setAnchor] = useState<DOMRect | null>(null);
+  const thumbRef = useRef<HTMLDivElement | null>(null);
   const youtubeId = youtubeIdFromUrl(video.sourceUrl);
-  return <div className={`thumb ${video.thumbnailUrl ? 'hasImage' : ''}`} style={{ background: video.gradient }} aria-label={`${video.title} thumbnail`} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>{video.thumbnailUrl ? <img src={video.thumbnailUrl} alt="" loading="lazy" referrerPolicy="no-referrer" /> : <Play size={16} />}{hover && youtubeId && <iframe className="thumbPreview" title={`${video.title} preview`} src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${youtubeId}&playsinline=1`} frameBorder={0} allow="autoplay" />}<span>{previewLabel(video)}</span></div>;
+  const openPreview = () => { if (thumbRef.current) setAnchor(thumbRef.current.getBoundingClientRect()); setHover(true); };
+  const closePreview = () => { setHover(false); setAnchor(null); };
+  return <div ref={thumbRef} className={`thumb ${video.thumbnailUrl ? 'hasImage' : ''}`} style={{ background: video.gradient }} aria-label={`${video.title} thumbnail`} onMouseEnter={openPreview} onMouseLeave={closePreview}>{video.thumbnailUrl ? <img src={video.thumbnailUrl} alt="" loading="lazy" referrerPolicy="no-referrer" /> : <Play size={16} />}<span>{previewLabel(video)}</span>{hover && youtubeId && anchor && <HoverPreviewCard video={video} youtubeId={youtubeId} anchor={anchor} />}</div>;
 }
 function VideoPreview({ video, size = 'compact' }: { video: VideoItem; size?: 'compact' | 'large' }) {
   const [hover, setHover] = useState(false);

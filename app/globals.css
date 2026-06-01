@@ -135,13 +135,17 @@ button:focus-visible, input:focus-visible { outline: 2px solid rgba(113,112,255,
 .tinyChart i { flex: 1; border-radius: 999px 999px 2px 2px; background: linear-gradient(180deg, rgba(113,112,255,.8), rgba(113,112,255,.08)); }
 
 .workspace { min-width: 0; padding: 18px; }
-.topbar {
-  position: sticky; top: 0; z-index: 20;
-  height: 42px; display: grid; grid-template-columns: minmax(280px, 1fr) auto auto minmax(120px, auto); gap: 10px; align-items: center;
-  /* workspace 좌우/상단 패딩만큼 음수 마진 후 패딩으로 보정해 스크롤 콘텐츠가 모서리로 비치지 않게 한다. */
+/* 검색창 + (열렸을 때)DiscoveryPanel + FilterRail을 하나로 묶어 통째로 sticky 고정한다.
+   workspace 좌우/상단 패딩만큼 음수 마진 후 패딩으로 보정해 스크롤 콘텐츠가 모서리로 비치지 않게,
+   불투명 배경(var(--bg))으로 뒤 콘텐츠가 비치지 않게 한다. */
+.stickyHeader {
+  position: sticky; top: 0; z-index: 30;
   margin: -18px -18px 0; padding: 18px 18px 12px;
   background: var(--bg);
   border-bottom: 1px solid var(--border-soft);
+}
+.topbar {
+  height: 42px; display: grid; grid-template-columns: minmax(280px, 1fr) auto auto minmax(120px, auto); gap: 10px; align-items: center;
 }
 .searchBox {
   height: 42px; display: flex; align-items: center; gap: 10px; padding: 0 12px;
@@ -249,11 +253,8 @@ h1 {
 .ingestRailGrid .ingestBox { margin-top: 0; }
 
 .filterRail {
-  position: sticky;
-  /* topbar(height 42 + padding-bottom 12) 바로 아래에 붙는다. */
-  top: 54px;
-  z-index: 15;
-  margin-top: 14px;
+  /* stickyHeader 컨테이너가 통째로 고정하므로 개별 sticky 불필요. */
+  margin-top: 12px;
   padding: 9px;
   display: flex;
   flex-wrap: wrap;
@@ -261,7 +262,6 @@ h1 {
   align-items: center;
   border: 1px solid var(--border-soft);
   border-radius: 16px;
-  /* sticky 시 아래 콘텐츠가 비치지 않도록 불투명 배경(패널 톤). */
   background: var(--panel);
 }
 .filterRail::before {
@@ -401,10 +401,33 @@ h1 {
 .videoInfo:hover h3 { color: var(--text); }
 .thumb { position: relative; width: 54px; height: 96px; aspect-ratio: 9 / 16; flex: 0 0 auto; border-radius: 9px; border: 1px solid rgba(255,255,255,.12); display: grid; place-items: center; color: white; overflow: hidden; box-shadow: inset 0 1px 0 rgba(255,255,255,.14); }
 .thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.thumb .thumbPreview { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; z-index: 2; pointer-events: none; object-fit: cover; }
 .thumb::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,.48)); }
 .thumb span { position: absolute; left: 4px; right: 4px; bottom: 3px; z-index: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: rgba(255,255,255,.84); font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 7px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; text-shadow: 0 1px 8px rgba(0,0,0,.74); }
 .thumb svg { position: relative; z-index: 1; filter: drop-shadow(0 2px 10px rgba(0,0,0,.44)); }
+/* 호버 시 행 옆에 뜨는 큰 미리보기 카드 (pint.kr식). body 포털 + position:fixed. */
+.hoverPreviewCard {
+  position: fixed;
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--panel-2);
+  box-shadow: 0 24px 60px rgba(0,0,0,.6), 0 0 0 1px rgba(113,112,255,.18);
+  pointer-events: none;
+  animation: hoverPreviewIn .14s ease;
+}
+@keyframes hoverPreviewIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.hoverPreviewVideo { position: relative; width: 100%; aspect-ratio: 9 / 16; background: #000; }
+.hoverPreviewVideo iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.hoverPreviewMeta { padding: 11px 13px 13px; display: flex; flex-direction: column; gap: 4px; }
+.hoverPreviewMeta h4 { margin: 0; font-size: 13px; font-weight: 590; line-height: 1.32; color: var(--text); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.hoverPreviewMeta p { margin: 0; color: var(--muted); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hoverPreviewStats { display: flex; gap: 10px; color: var(--silver); font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 11px; }
+.hoverPreviewActions { margin-top: 6px; display: flex; gap: 7px; }
+.hoverPreviewActions span, .hoverPreviewActions a { width: 26px; height: 26px; display: grid; place-items: center; border-radius: 7px; border: 1px solid var(--border); background: rgba(255,255,255,.04); color: var(--silver); }
+.hoverPreviewActions .saved { color: var(--warning); border-color: rgba(245,158,11,.24); background: rgba(245,158,11,.08); }
 .videoInfo h3 { margin: 0; font-size: 13px; font-weight: 510; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .videoInfo p { margin: 4px 0 0; color: var(--muted); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pill { width: max-content; max-width: 104px; padding: 5px 8px; border: 1px solid var(--border); border-radius: 999px; color: var(--silver); background: rgba(255,255,255,.025); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -417,9 +440,9 @@ h1 {
 
 .detailPanel {
   position: sticky;
-  /* sticky topbar(54) + filterRail(약 60) 아래에 고정. scorecard~폴더까지 패널 안에서 스크롤된다. */
-  top: 116px;
-  max-height: calc(100vh - 132px);
+  /* stickyHeader(검색창+FilterRail 묶음, 닫힘 상태 약 150px) 아래에 고정. scorecard~폴더까지 패널 안에서 스크롤된다. */
+  top: 158px;
+  max-height: calc(100vh - 174px);
   overflow-y: auto;
   padding: 14px;
   display: grid;
@@ -867,7 +890,8 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
   .dashboardHeader h1, .dashboardHeader p { white-space: normal; overflow: visible; text-overflow: clip; }
   .dashboardHeader h1 { line-height: 1.18; }
   .dashboardHeader p { line-height: 1.55; }
-  .topbar { position: static; height: auto; margin: 0; padding: 0; background: transparent; border-bottom: 0; }
+  .stickyHeader { position: static; margin: 0; padding: 0; background: transparent; border-bottom: 0; }
+  .topbar { height: auto; }
   .filterRail { position: static; top: auto; }
   .topbar .ghost, .topbar .primary { justify-content: center; width: 100%; }
   .topbarStatus { text-align: center; }
