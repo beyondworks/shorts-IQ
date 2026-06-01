@@ -9,6 +9,9 @@ export type BreakoutSignal = {
   outlier: number | null; // peer-group 중앙값 대비 배율
   freshVph: number; // 신선도 가중 시간당 조회수
   ageHours: number;
+  // 신뢰도(축의 '질' 기준): 1순위 outlier(또래 대비 실측) 보유 = high,
+  // 없고 노이즈 큰 VSR(구독자 대비)만 = medium, 둘 다 없어 velocity(절대 인기)만 = low(가짜 확신 금지).
+  confidence: 'high' | 'medium' | 'low';
   measured: { subscriberMultiple: boolean; outlier: boolean };
 };
 

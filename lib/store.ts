@@ -1,6 +1,6 @@
 import { mkdir, readFile, rename, writeFile } from 'fs/promises';
 import path from 'node:path';
-import { attachBreakout, commentsScore, durationSeconds, formatCompact, measuredVelocity, pct, shareScore, uploadedHours, velocityNumber } from './metrics';
+import { ageHours, attachBreakout, commentsScore, durationSeconds, formatCompact, measuredVelocity, pct, shareScore, velocityNumber } from './metrics';
 import { createSeedState } from './seed';
 import type { AppState, ChannelSummary, DownloadClip, FolderCollection, FolderItem, MatchReport, PolicyCheck, TemplatePattern, VideoItem } from './types';
 
@@ -652,10 +652,12 @@ const isAllValue = (value?: string) => !value || value === '전체' || value.sta
 
 const matchesUploaded = (video: VideoItem, uploaded?: string) => {
   if (isAllValue(uploaded)) return true;
-  if (uploaded === '실시간') return uploadedHours(video.uploaded) <= 1;
-  if (uploaded === '1년 이상') return uploadedHours(video.uploaded) >= 8760;
+  // publishedAt 기반 나이로 기간 필터 — uploaded 고정값('Nh ago')이 아니라 현재 시점 기준 정확.
+  const age = ageHours(video);
+  if (uploaded === '실시간') return age <= 1;
+  if (uploaded === '1년 이상') return age >= 8760;
   const hours = uploadedHoursFromLabel(uploaded);
-  return hours === null || uploadedHours(video.uploaded) <= hours;
+  return hours === null || age <= hours;
 };
 
 const uploadedHoursFromLabel = (label?: string) => {
@@ -698,8 +700,8 @@ const compareVideos = (a: VideoItem, b: VideoItem, sort?: string) => {
       return pct(b.saveRate) - pct(a.saveRate);
     case 'latest':
     case '최신순':
-      // 신선도순: 업로드가 최근일수록 위로.
-      return uploadedHours(a.uploaded) - uploadedHours(b.uploaded);
+      // 신선도순: publishedAt 기반 나이가 적을수록(최근일수록) 위로 — 표시 시간과 정렬 기준 일치.
+      return ageHours(a) - ageHours(b);
     case 'comments':
     case '댓글수순':
       return commentsScore(b) - commentsScore(a);

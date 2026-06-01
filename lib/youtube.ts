@@ -210,7 +210,8 @@ export type DiscoverPayload = {
   keywords?: string[];
   keywordCount?: number;
   perKeyword?: number;
-  periodHours?: number;
+  periodHours?: number; // 구간 시작: now - periodHours 이후 업로드 (publishedAfter)
+  beforeHours?: number; // 구간 끝: now - beforeHours 이전 업로드 (publishedBefore). 과거 구간 백필용.
   includePopular?: boolean;
   offset?: number;
 };
@@ -230,6 +231,7 @@ export const discoverBreakouts = async (payload: DiscoverPayload): Promise<Disco
     : selectSeedKeywords(payload.keywordCount ?? 12, payload.offset ?? 0);
   const perKeyword = Math.max(1, Math.min(50, Math.round(payload.perKeyword ?? 15)));
   const publishedAfter = periodHoursToIso(payload.periodHours);
+  const publishedBefore = periodHoursToIso(payload.beforeHours);
 
   const ids = new Set<string>();
   const warnings: string[] = [];
@@ -244,7 +246,7 @@ export const discoverBreakouts = async (payload: DiscoverPayload): Promise<Disco
 
   for (const keyword of keywords) {
     try {
-      const plan = buildYoutubeImportPlan({ regionCode: region, language, query: keyword, maxResults: perKeyword, order: 'viewCount', publishedAfter });
+      const plan = buildYoutubeImportPlan({ regionCode: region, language, query: keyword, maxResults: perKeyword, order: 'viewCount', publishedAfter, publishedBefore });
       for (const id of await searchVideoIds(plan, key)) ids.add(id);
     } catch (error) {
       warnings.push(`'${keyword}' 수집 실패: ${errorMessage(error)}`);
@@ -277,6 +279,64 @@ export const discoverBreakoutsWithFallback = async (
       degraded: true,
       degradedReason: error instanceof Error ? error.message : 'YouTube 대량 수집에 실패했습니다.',
     };
+  }
+};
+
+// 기간 구간별 대량 백필. 과거 영상은 누적 조회수가 확정이라 구간 1회 수집이면 충분하다.
+// 겹치지 않는 구간(24h / 1~7일 / 7~30일 / 30일~1년)으로 나눠 각 시기의 터진 영상을 골고루 채운다.
+// 실시간(24h)만 이후 resample/자동신선화로 갱신하면 된다.
+const BACKFILL_WINDOWS = [
+  { label: '24h', afterHours: 24, beforeHours: 0 },
+  { label: '1-7d', afterHours: 168, beforeHours: 24 },
+  { label: '7-30d', afterHours: 720, beforeHours: 168 },
+  { label: '30-365d', afterHours: 8760, beforeHours: 720 },
+];
+
+export type BackfillResult = AppState & { discovered: number; windows: { label: string; discovered: number }[]; warnings: string[] };
+
+export const backfillPeriods = async (payload: DiscoverPayload = {}): Promise<BackfillResult> => {
+  const key = getApiKey();
+  if (!key) throw new StoreInputError('YOUTUBE_DATA_API_KEY or SHORTS_IQ_YOUTUBE_API_KEY is required');
+
+  const perWindow: { label: string; discovered: number }[] = [];
+  const warnings: string[] = [];
+  let total = 0;
+  let lastState: DiscoverResult | null = null;
+
+  for (let index = 0; index < BACKFILL_WINDOWS.length; index += 1) {
+    const window = BACKFILL_WINDOWS[index];
+    try {
+      // 인기차트는 '지금 인기'라 24h 구간에서만 의미 — 구간마다 중복 수집 방지.
+      const result = await discoverBreakouts({
+        ...payload,
+        periodHours: window.afterHours,
+        beforeHours: window.beforeHours,
+        includePopular: index === 0 ? payload.includePopular : false,
+        offset: (payload.offset ?? 0) + index, // 구간마다 키워드 묶음을 살짝 회전
+      });
+      perWindow.push({ label: window.label, discovered: result.discovered });
+      warnings.push(...result.warnings);
+      total += result.discovered;
+      lastState = result;
+    } catch (error) {
+      perWindow.push({ label: window.label, discovered: 0 });
+      warnings.push(`${window.label} 백필 실패: ${errorMessage(error)}`);
+    }
+  }
+
+  if (!lastState) throw new StoreInputError('백필된 영상이 없습니다. 쿼터·네트워크를 확인하세요.');
+  return { ...lastState, discovered: total, windows: perWindow, warnings };
+};
+
+export const backfillPeriodsWithFallback = async (
+  payload: DiscoverPayload = {},
+): Promise<BackfillResult & { degraded?: boolean; degradedReason?: string }> => {
+  try {
+    return await backfillPeriods(payload);
+  } catch (error) {
+    if (error instanceof StoreInputError && /API_KEY|required/i.test(error.message)) throw error;
+    const cached = await readState();
+    return { ...cached, discovered: 0, windows: [], warnings: [], degraded: true, degradedReason: error instanceof Error ? error.message : '기간 백필에 실패했습니다.' };
   }
 };
 

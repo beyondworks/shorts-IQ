@@ -11,11 +11,11 @@ import {
 } from 'lucide-react';
 import { categoryOptions, templateOptions } from '../lib/catalog';
 import {
-  commentsScore, computeBaseline, durationSeconds, formatCompact, measuredVelocity, pct, scorecardCurve,
-  scoreWindows, shareScore, uploadedHours, velocityNumber, vidiqMetrics,
+  ageHours, commentsScore, computeBaseline, durationSeconds, formatCompact, measuredVelocity, pct, scorecardCurve,
+  scoreWindows, shareScore, velocityNumber, vidiqMetrics,
   type ScoreWindow,
 } from '../lib/metrics';
-import type { AppState, ChannelSummary, DownloadClip, FolderItem, MatchReport, VideoItem } from '../lib/types';
+import type { AppState, BreakoutSignal, ChannelSummary, DownloadClip, FolderItem, MatchReport, VideoItem } from '../lib/types';
 
 const navItems = [
   { label: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -41,7 +41,9 @@ const filterGroups = {
   sort: ['터진순', '급가속순', '조회수순', '저장률순', '최신순', '댓글수순', '공유순'],
 };
 type DiscoveryFilters = { [K in keyof typeof filterGroups]: (typeof filterGroups)[K][number] };
-const defaultFilters: DiscoveryFilters = { uploaded: '업로드 24h', views: '전체 조회수', duration: '전체 길이', language: '한국어', subscribers: '전체 규모', sort: '터진순' };
+// 기본 랜딩 = 이번 주(7일): breakout은 시간이 지나야 드러나므로(2h 전 영상은 아직 구독 폭배율 미달),
+// '지금(24h)'으로 열면 비어 보인다. North Star "열면 터진 영상이 차있다"를 위해 진짜 breakout이 차는 7일을 기본으로.
+const defaultFilters: DiscoveryFilters = { uploaded: '7일', views: '전체 조회수', duration: '전체 길이', language: '한국어', subscribers: '전체 규모', sort: '터진순' };
 const filterLabelMap: Record<keyof DiscoveryFilters, string> = { uploaded: '업로드', views: '조회수', duration: '길이', language: '언어', subscribers: '채널규모', sort: '정렬' };
 const filterSummary = (filters: DiscoveryFilters) => Object.values(filters).join(' · ');
 const uploadWindowHours = (window: DiscoveryFilters['uploaded']) => window === '실시간' ? 1 : window === '업로드 24h' ? 24 : window === '업로드 3일' ? 72 : window === '7일' ? 168 : window === '14일' ? 336 : window === '30일' ? 720 : window === '60일' ? 1440 : window === '90일' ? 2160 : window === '180일' ? 4320 : window === '1년 이상' ? Infinity : Infinity;
@@ -114,6 +116,16 @@ const relativeSyncTime = (value: string | null): { text: string; stale: boolean 
 // 터진 영상 등급 색 (pint식: 폭발=핫핑크, 급상승=민트, 주목=앰버, 안정=회색).
 const breakoutColor = (grade?: string) => grade === 'Breakout' ? '#ff4d8d' : grade === 'Surging' ? '#00d9c0' : grade === 'Notable' ? '#f5a623' : '#6b7280';
 const breakoutLabel = (grade?: string) => grade === 'Breakout' ? '폭발' : grade === 'Surging' ? '급상승' : grade === 'Notable' ? '주목' : '안정';
+
+// 터진 점수 배지. confidence가 high가 아니면(또래 표본 부족/절대 인기만) 흐리게 + '?'로 신뢰도를 정직하게 노출.
+function BreakoutScore({ signal }: { signal: BreakoutSignal }) {
+  const base = `터진 점수 ${signal.score}/100 · ${breakoutLabel(signal.grade)}`;
+  if (signal.confidence === 'high') {
+    return <em title={base} style={{ color: breakoutColor(signal.grade), fontWeight: 700 }}>{signal.score}</em>;
+  }
+  const note = signal.confidence === 'low' ? '또래·구독자 표본 부족 — 절대 인기만, 신뢰도 낮음' : '또래 표본 부족 — 구독자 추정 기반';
+  return <em title={`${base} · ${note}`} style={{ color: breakoutColor(signal.grade), fontWeight: 700, opacity: signal.confidence === 'low' ? 0.5 : 0.72 }}>{signal.score}<sup style={{ fontSize: '0.62em', marginLeft: 1 }}>?</sup></em>;
+}
 // 구독자 대비 배율 표기 — 한국식. 1만+: "×1.7만", 10~9999: "×453", 미만: "×4.2"
 const multipleLabel = (multiple?: number | null) => {
   if (multiple == null) return null;
@@ -121,19 +133,16 @@ const multipleLabel = (multiple?: number | null) => {
   if (multiple >= 10) return `×${Math.round(multiple).toLocaleString('ko-KR')}`;
   return `×${multiple.toFixed(1)}`;
 };
-// "34m ago" / "2h ago" / "1d ago" 저장값 → "34분 전" / "2시간 전" / "1일 전".
-// 30일+ → "N개월 전", 365일+ → "N년 전". 기존 포맷 호환.
-const displayUploaded = (uploaded: string): string => {
-  const m = uploaded.match(/^(\d+)([mhd])\s*ago$/);
-  if (!m) return uploaded; // 알 수 없는 포맷은 그대로
-  const n = Number(m[1]);
-  const unit = m[2];
-  if (unit === 'm') return `${n}분 전`;
-  if (unit === 'h') return `${n}시간 전`;
-  // 'd' (일)
-  if (n >= 365) return `${Math.round(n / 365)}년 전`;
-  if (n >= 30) return `${Math.round(n / 30)}개월 전`;
-  return `${n}일 전`;
+// publishedAt 기반 상대시간 → "34분 전" / "2시간 전" / "1일 전" / "N개월 전" / "N년 전".
+// 수집 시점 고정값('Nh ago')이 아니라 현재 시점 기준이라 시간이 지나도 정확.
+const displayUploaded = (video: VideoItem): string => {
+  const h = ageHours(video);
+  if (h < 1) return `${Math.max(1, Math.round(h * 60))}분 전`;
+  if (h < 24) return `${Math.round(h)}시간 전`;
+  const d = Math.round(h / 24);
+  if (d >= 365) return `${Math.round(d / 365)}년 전`;
+  if (d >= 30) return `${Math.round(d / 30)}개월 전`;
+  return `${d}일 전`;
 };
 // "+78.1K/h" 저장값 → "시간당 7.8만회". velocityNumber() 파서와 저장 포맷은 유지.
 const displayVelocity = (velocity: string): string => {
@@ -233,10 +242,13 @@ export function PrototypeApp({ page = 'dashboard', videoId }: { page?: PageKind;
     if (!isStale && !isEmpty) return;
     autoRefreshDone.current = true;
     setAutoRefreshing(true);
-    requestState('/api/youtube/discover', {
-      method: 'POST',
-      body: JSON.stringify({ periodHours: 168, keywordCount: 8, perKeyword: 12, includePopular: true }),
-    })
+    // 빈 인덱스면 전 구간 백필(과거 영상까지 한 번에 채움 — 누적 조회수 확정),
+    // 데이터는 있는데 오래됐으면 최근 24h만 갱신(과거는 이미 있으니 재수집 불필요).
+    const endpoint = isEmpty ? '/api/youtube/backfill' : '/api/youtube/discover';
+    const body = isEmpty
+      ? { keywordCount: 6, perKeyword: 10, includePopular: true }
+      : { periodHours: 24, keywordCount: 8, perKeyword: 12, includePopular: true };
+    requestState(endpoint, { method: 'POST', body: JSON.stringify(body) })
       .then((nextState) => { applyState(nextState); })
       .catch(() => { /* 자동 수집 실패는 조용히 무시 — 기존 데이터로 계속 보여준다. */ })
       .finally(() => { setAutoRefreshing(false); });
@@ -317,13 +329,13 @@ export function PrototypeApp({ page = 'dashboard', videoId }: { page?: PageKind;
   const clientFilteredVideos = useMemo(() => videoState
     .filter((video) => activeCategory === '전체' || video.category === activeCategory)
     .filter((video) => activeTemplate === '전체' || video.template === activeTemplate)
-    .filter((video) => filters.uploaded === '전체 기간' || (filters.uploaded === '1년 이상' ? uploadedHours(video.uploaded) >= 8760 : uploadedHours(video.uploaded) <= uploadWindowHours(filters.uploaded)))
+    .filter((video) => filters.uploaded === '전체 기간' || (filters.uploaded === '1년 이상' ? ageHours(video) >= 8760 : ageHours(video) <= uploadWindowHours(filters.uploaded)))
     .filter((video) => filters.views === '전체 조회수' || video.viewCount >= Number(filters.views.match(/(\d+)/)?.[1] ?? 0) * 10000)
     .filter((video) => filters.duration === '전체 길이' || durationSeconds(video.duration) <= Number(filters.duration.match(/(\d+)/)?.[1] ?? 60))
     .filter((video) => filters.language === '전체 언어' || (video.language ?? '한국어') === filters.language)
     .filter((video) => subscriberBound(filters.subscribers) === null || video.subscriberCount == null || video.subscriberCount <= subscriberBound(filters.subscribers)!)
     .filter((video) => `${video.title} ${video.channel} ${video.template} ${video.category}`.toLowerCase().includes(query.toLowerCase()))
-    .sort((a, b) => filters.sort === '조회수순' ? b.viewCount - a.viewCount : filters.sort === '최신순' ? uploadedHours(a.uploaded) - uploadedHours(b.uploaded) : filters.sort === '저장률순' ? pct(b.saveRate) - pct(a.saveRate) : filters.sort === '댓글수순' ? commentsScore(b) - commentsScore(a) : filters.sort === '공유순' ? shareScore(b) - shareScore(a) : filters.sort === '급가속순' ? measuredVelocity(b).perHour - measuredVelocity(a).perHour : (b.breakout?.score ?? 0) - (a.breakout?.score ?? 0) || b.viewCount - a.viewCount),
+    .sort((a, b) => filters.sort === '조회수순' ? b.viewCount - a.viewCount : filters.sort === '최신순' ? ageHours(a) - ageHours(b) : filters.sort === '저장률순' ? pct(b.saveRate) - pct(a.saveRate) : filters.sort === '댓글수순' ? commentsScore(b) - commentsScore(a) : filters.sort === '공유순' ? shareScore(b) - shareScore(a) : filters.sort === '급가속순' ? measuredVelocity(b).perHour - measuredVelocity(a).perHour : (b.breakout?.score ?? 0) - (a.breakout?.score ?? 0) || b.viewCount - a.viewCount),
   [activeCategory, activeTemplate, filters, query, videoState]);
   const filteredVideos = serverVideos ?? clientFilteredVideos;
   const activeFilter = `${filterSummary(filters)} · ${serverVideos ? 'server results' : 'local fallback'}`;
@@ -351,7 +363,8 @@ export function PrototypeApp({ page = 'dashboard', videoId }: { page?: PageKind;
   const createMatchReport = (payload?: { remakeNotes?: string; remakeTitle?: string; remakeUrl?: string }) => postState('match', '/api/match-reports', selected ? { sourceVideoId: selected.id, sourceTitle: selected.title, sourceUrl: selected.sourceUrl, ...payload } : payload, undefined, 'Match Guard 리포트를 생성했습니다.');
   const ingestReference = (payload: { category?: string; language?: string; sourceUrl?: string; template?: string; title?: string }) => postState('ingest', '/api/ingest', payload, undefined, '새 레퍼런스를 인덱스에 추가했습니다.');
   const importYoutubeKeyword = (payload: { category?: string; language?: string; query?: string; template?: string; order?: string }) => postState('youtube', '/api/youtube/search', { ...payload, maxResults: 30, order: payload.order ?? 'viewCount', regionCode: payload.language === '영어' ? 'US' : 'KR' }, undefined, 'YouTube Data API 검색 결과를 인덱스에 추가했습니다.');
-  const discoverBreakouts = (payload: { periodHours?: number; keywordCount?: number; language?: string }) => postState('youtube', '/api/youtube/discover', { ...payload, perKeyword: 15, includePopular: true, regionCode: payload.language === '영어' ? 'US' : 'KR' }, undefined, '터진 영상을 기간 기준으로 대량 수집했습니다.');
+  // 전 구간 백필: 24h/1~7일/7~30일/30일~1년을 한 번에. 과거는 누적 조회수 확정이라 1회로 충분.
+  const discoverBreakouts = (payload: { periodHours?: number; keywordCount?: number; language?: string }) => postState('youtube', '/api/youtube/backfill', { keywordCount: 8, perKeyword: 12, includePopular: true, regionCode: payload.language === '영어' ? 'US' : 'KR', language: payload.language }, undefined, '24시간~1년 전 구간의 터진 영상을 한 번에 수집했습니다.');
   const updateDownload = (clipId: string, status: DownloadClip['status']) => postState('download', '/api/downloads', { clipId, status }, undefined, status === 'ready' ? '다운로드 클립을 ready로 표시했습니다.' : status === 'failed' ? '다운로드 클립을 failed로 표시했습니다.' : '다운로드 클립을 queued로 되돌렸습니다.', 'PATCH');
   const processDownload = (clipId: string) => postState('download', '/api/downloads/process', { clipId }, undefined, '로컬 다운로드 파이프라인을 실행했습니다.');
 
@@ -467,7 +480,7 @@ function DashboardPage(props: any) {
   // '터진 영상' 중심 KPI: 가짜 평균 상승세/누적 조회수 대신 실제 폭발 신호 3개만.
   const breakoutCount = peers.filter((v) => v.breakout && (v.breakout.grade === 'Breakout' || v.breakout.grade === 'Surging')).length;
   const topMultiple = peers.reduce((max, v) => Math.max(max, v.breakout?.subscriberMultiple ?? 0), 0);
-  const fresh24h = peers.filter((v) => uploadedHours(v.uploaded) <= 24).length;
+  const fresh24h = peers.filter((v) => ageHours(v) <= 24).length;
   // 인덱스에 영상이 0개인 진짜 빈 상태에서만 수집 서랍을 자동으로 펼친다
   // (기간 필터 결과가 0개인 건 빈 상태가 아니라 "이 기간에 결과 없음").
   const [ingestOpen, setIngestOpen] = useState(peers.length === 0);
@@ -505,7 +518,6 @@ function DashboardIngest({ activeCategory, activeTemplate, onIngest, ingesting, 
   const [youtubeQuery, setYoutubeQuery] = useState('');
   const [sortOrder, setSortOrder] = useState<'viewCount' | 'date'>('viewCount');
   const [language, setLanguage] = useState<VideoItem['language']>('한국어');
-  const [periodHours, setPeriodHours] = useState(168);
   const submitIngest = async () => {
     const saved = await onIngest({
       sourceUrl: sourceUrl.trim() || undefined,
@@ -529,7 +541,7 @@ function DashboardIngest({ activeCategory, activeTemplate, onIngest, ingesting, 
   return <section className="ingestRail" aria-label="데이터 수집">
     <div className="ingestRailHead"><span className="miniLabel">영상 가져오기</span><p>기간 기준 대량 발견으로 터진 영상을 폭넓게 모으거나, 키워드·URL로 직접 추가합니다.</p></div>
     <div className="ingestRailGrid">
-      <div className="ingestBox"><span className="miniLabel">터진 영상 대량 발견</span><p className="ingestHint">기간을 정하면 여러 키워드 + 인기차트를 한 번에 훑어 터진 영상을 폭넓게 모읍니다.</p><p className="ingestFieldLabel">수집 기간</p><div className="segmentedMini">{([[24, '최근 24시간'], [168, '최근 7일'], [720, '최근 30일']] as const).map(([value, label]) => <button key={value} type="button" className={periodHours === value ? 'activeChip' : ''} onClick={() => setPeriodHours(value)}>{label}</button>)}</div><div className="segmentedMini">{(['한국어', '영어'] as const).map((item) => <button key={item} type="button" className={language === item ? 'activeChip' : ''} onClick={() => setLanguage(item)}>{item}</button>)}</div><button className="primary wide" onClick={() => { void onDiscover({ periodHours, keywordCount: 14, language }); }} disabled={discovering}><Sparkles size={14} /> {discovering ? '대량 수집 중...' : '터진 영상 대량 수집'}</button></div>
+      <div className="ingestBox"><span className="miniLabel">터진 영상 대량 발견</span><p className="ingestHint">24시간~1년 전 구간을 한 번에 훑어 터진 영상을 채웁니다. 과거 영상은 누적 조회수가 확정이라 한 번 수집하면 충분합니다.</p><div className="segmentedMini">{(['한국어', '영어'] as const).map((item) => <button key={item} type="button" className={language === item ? 'activeChip' : ''} onClick={() => setLanguage(item)}>{item}</button>)}</div><button className="primary wide" onClick={() => { void onDiscover({ language }); }} disabled={discovering}><Sparkles size={14} /> {discovering ? '대량 수집 중...' : '전 구간 터진 영상 수집'}</button></div>
       <div className="ingestBox"><span className="miniLabel">키워드로 영상 수집</span><p className="ingestHint">검색어를 입력하면 유튜브에서 인기 Shorts를 자동으로 모아옵니다.</p><input aria-label="YouTube keyword" placeholder="예: 강아지 브이로그, 먹방, 롤 하이라이트" value={youtubeQuery} onChange={(event) => setYoutubeQuery(event.target.value)} /><p className="ingestFieldLabel">추천 검색어</p><div className="ingestChips">{['먹방', '브이로그', '게임', '뷰티', '강아지', '운동', '연애 이슈', '정치·시사'].map((kw) => <button key={kw} type="button" onClick={() => setYoutubeQuery(kw)}>{kw}</button>)}</div><p className="ingestFieldLabel">정렬</p><div className="segmentedMini">{([['viewCount', '인기순'], ['date', '최신순']] as const).map(([v, l]) => <button key={v} type="button" className={sortOrder === v ? 'activeChip' : ''} onClick={() => setSortOrder(v)}>{l}</button>)}</div><button className="primary wide" onClick={() => { void submitYoutubeImport(); }} disabled={youtubeImporting || !youtubeQuery.trim()}><Search size={14} /> {youtubeImporting ? '수집 중' : '수집하기'}</button></div>
       <div className="ingestBox"><span className="miniLabel">URL로 영상 직접 추가</span><p className="ingestHint">특정 유튜브 영상 URL을 붙여넣어 바로 인덱스에 추가합니다.</p><input aria-label="YouTube Shorts URL" placeholder="YouTube Shorts URL 붙여넣기" value={sourceUrl} onChange={(event) => setSourceUrl(event.target.value)} /><input aria-label="Manual title" placeholder="제목 (URL 없을 때만 입력)" value={title} onChange={(event) => setTitle(event.target.value)} /><div className="segmentedMini">{(['한국어', '영어', '기타'] as const).map((item) => <button key={item} className={language === item ? 'activeChip' : ''} onClick={() => setLanguage(item)}>{item}</button>)}</div><button className="primary wide" onClick={() => { void submitIngest(); }} disabled={ingesting || (!sourceUrl.trim() && !title.trim())}><Search size={14} /> {ingesting ? '추가 중' : '영상 추가'}</button></div>
     </div>
@@ -562,7 +574,7 @@ function FilterRail({ filters, setFilters }: { filters: DiscoveryFilters; setFil
   </section>;
 }
 function RankingPanel({ filteredVideos, activeCategory = '전체', activeTemplate = '전체', activeFilter = '전체 실시간 인기', serverQueryUrl, discoveryLoading, discoveryError, setSelectedId, toggleSaved, setDownloadModal, setFolderModal }: any) { return <div className="rankPanel"><div className="panelHead"><div><span className="miniLabel">실시간 랭킹</span><h2>지금 터진 영상</h2><p className="panelSub">구독자 대비 배율·신선 속도 기준 · {activeCategory} · {activeTemplate} · {activeFilter}</p><p className={`serverQuery ${discoveryError ? 'error' : ''}`}>{discoveryError ? `API fallback: ${discoveryError}` : `${discoveryLoading ? '동기화 중' : '서버'} ${serverQueryUrl}`}</p></div><div className="panelActions"><button className="ghost small">초기화</button><button className="ghost small">CSV 내보내기</button></div></div><div className="tableHeader"><span>순위</span><span>영상</span><span>템플릿</span><span>조회수</span><span>터진 신호</span><span>액션</span></div><VideoRows videos={filteredVideos} setSelectedId={setSelectedId} toggleSaved={toggleSaved} setDownloadModal={setDownloadModal} setFolderModal={setFolderModal} /></div>; }
-function VideoRows({ videos: rows, setSelectedId, toggleSaved, setDownloadModal, setFolderModal }: { videos: VideoItem[]; setSelectedId: (id: string) => void; toggleSaved: (id: string) => void; setDownloadModal: (v: boolean) => void; setFolderModal: (v: boolean) => void }) { return <div className="videoRows">{rows.map((video) => <article className="videoRow" key={video.id} onClick={() => setSelectedId(video.id)}><div className="rank"><b>{video.rank}</b>{video.breakout && <em title={`터진 점수 ${video.breakout.score}/100 · ${breakoutLabel(video.breakout.grade)}`} style={{ color: breakoutColor(video.breakout.grade), fontWeight: 700 }}>{video.breakout.score}</em>}</div><div className="videoInfo"><VideoThumb video={video} /><div><h3>{video.title}</h3><p>{video.channel} · {displayUploaded(video.uploaded)} · {video.category}</p></div></div><span className="pill">{video.template}</span><strong className="mono">{video.views}</strong>{(() => { const b = video.breakout; const mult = multipleLabel(b?.subscriberMultiple); return <span className="velocity" style={b ? { color: breakoutColor(b.grade) } : undefined} title={b?.measured.subscriberMultiple ? '구독자 대비 조회수 배율(실측)' : '시간당 조회수'}>{b ? `${breakoutLabel(b.grade)}${mult ? ` 구독${mult}` : ''}` : `시간당 ${formatCompact(measuredVelocity(video).perHour)}회`}</span>; })()}<div className="rowActions"><button aria-label="북마크" className={video.saved ? 'icon saved' : 'icon'} onClick={(event) => { event.stopPropagation(); toggleSaved(video.id); }}><Star size={13} /></button><button aria-label="구간 다운로드" className="icon" onClick={(event) => { event.stopPropagation(); setSelectedId(video.id); setDownloadModal(true); }}><Download size={13} /></button><button aria-label="폴더 선택" className="icon" onClick={(event) => { event.stopPropagation(); setSelectedId(video.id); setFolderModal(true); }}><MoreHorizontal size={13} /></button></div></article>)}{rows.length === 0 && <div className="emptyState">조건이 너무 좁습니다. 전체 랭킹 보기로 되돌려보세요.</div>}</div>; }
+function VideoRows({ videos: rows, setSelectedId, toggleSaved, setDownloadModal, setFolderModal }: { videos: VideoItem[]; setSelectedId: (id: string) => void; toggleSaved: (id: string) => void; setDownloadModal: (v: boolean) => void; setFolderModal: (v: boolean) => void }) { return <div className="videoRows">{rows.map((video) => <article className="videoRow" key={video.id} onClick={() => setSelectedId(video.id)}><div className="rank"><b>{video.rank}</b>{video.breakout && <BreakoutScore signal={video.breakout} />}</div><div className="videoInfo"><VideoThumb video={video} /><div><h3>{video.title}</h3><p>{video.channel} · {displayUploaded(video)} · {video.category}</p></div></div><span className="pill">{video.template}</span><strong className="mono">{video.views}</strong>{(() => { const b = video.breakout; const mult = multipleLabel(b?.subscriberMultiple); return <span className="velocity" style={b ? { color: breakoutColor(b.grade) } : undefined} title={b?.measured.subscriberMultiple ? '구독자 대비 조회수 배율(실측)' : '시간당 조회수'}>{b ? `${breakoutLabel(b.grade)}${mult ? ` 구독${mult}` : ''}` : `시간당 ${formatCompact(measuredVelocity(video).perHour)}회`}</span>; })()}<div className="rowActions"><button aria-label="북마크" className={video.saved ? 'icon saved' : 'icon'} onClick={(event) => { event.stopPropagation(); toggleSaved(video.id); }}><Star size={13} /></button><button aria-label="구간 다운로드" className="icon" onClick={(event) => { event.stopPropagation(); setSelectedId(video.id); setDownloadModal(true); }}><Download size={13} /></button><button aria-label="폴더 선택" className="icon" onClick={(event) => { event.stopPropagation(); setSelectedId(video.id); setFolderModal(true); }}><MoreHorizontal size={13} /></button></div></article>)}{rows.length === 0 && <div className="emptyState">조건이 너무 좁습니다. 전체 랭킹 보기로 되돌려보세요.</div>}</div>; }
 function ScorecardCurve({ selected }: { selected: VideoItem }) {
   const [window, setWindow] = useState<ScoreWindow>('All');
   const curve = scorecardCurve(selected, window);
@@ -582,7 +594,7 @@ function VidiqInsightPanel({ selected, peers = [], compact = false }: { selected
   return <div className={`vidiqPanel ${compact ? 'compact' : ''}`}>
     <div className="vidiqCardTop"><div><span className="miniLabel">성과 분석</span><h3>조회수</h3><strong>{formatCompact(selected.viewCount)}</strong></div><div className="iqBadge">IQ</div></div>
     <ScorecardCurve selected={selected} />
-    <div className="vidiqMetricRows"><div><span>업로드</span><b>{displayUploaded(selected.uploaded)}</b></div><div><span>시간당 조회수</span><b>{formatCompact(metrics.vph)}</b></div><div><span>참여도</span><b>{metrics.engagement}% <em className="miniLabel">{metrics.measured.engagement ? '측정' : '추정'}</em></b></div></div>
+    <div className="vidiqMetricRows"><div><span>업로드</span><b>{displayUploaded(selected)}</b></div><div><span>시간당 조회수</span><b>{formatCompact(metrics.vph)}</b></div><div><span>참여도</span><b>{metrics.engagement}% <em className="miniLabel">{metrics.measured.engagement ? '측정' : '추정'}</em></b></div></div>
     <div className="vidiqScoreRow"><strong style={{ color: breakoutColor(selected.breakout?.grade) }}>{selected.breakout?.score ?? metrics.score}</strong><div><b>{breakoutLabel(selected.breakout?.grade)}</b><span>터진 점수 · 또래 대비 {selected.breakout?.measured.outlier ? `${selected.breakout.outlier?.toFixed(1)}배` : '표본 부족'}</span></div></div>
     <div className="vidiqMetricGrid">
       <span><b style={{ color: breakoutColor(selected.breakout?.grade) }}>{multipleLabel(selected.breakout?.subscriberMultiple) ?? '미상'}</b><em>구독자 대비 · {selected.breakout?.measured.subscriberMultiple ? '실측' : '비공개'}</em></span>
@@ -593,7 +605,7 @@ function VidiqInsightPanel({ selected, peers = [], compact = false }: { selected
     <p className="insightCopy">조회수·좋아요·댓글·구독자는 YouTube API <b>실측값</b>입니다. ‘터진 점수’는 구독자 대비 배율 + peer 대비 outlier + 신선 속도를 결합하며, 표본이 부족하면 ‘표본부족/비공개’로 정직하게 표기합니다. 시청 유지·저장률은 YouTube가 공개하지 않아 표시하지 않습니다.</p>
   </div>;
 }
-function DetailPanel({ selected, peers = [], folderStats, clipStart, clipEnd, setClipStart, setClipEnd, setDownloadModal, assignFolder }: any) { return <aside className="detailPanel"><div className="selectedPreview"><div className="phoneFrame"><VideoPreview video={selected} /></div><div><span className="miniLabel">선택한 영상</span><h2>{selected.title}</h2><p>{selected.template} · {selected.category} · {displayUploaded(selected.uploaded)}</p><p className="miniLabel" style={{ marginTop: 4, opacity: .7 }}>출처 {previewLabel(selected)} · 수집 {formatSyncTime(selected.lastSampledAt ?? null)}</p></div></div><VidiqInsightPanel selected={selected} peers={peers} /><div className="clipBox"><div className="boxHead"><Download size={14} /> 구간 선택 다운로드</div><div className="timeline"><span style={{ left: `${clipStart * 2}%` }} /><span style={{ left: `${clipEnd * 2}%` }} /><div style={{ left: `${clipStart * 2}%`, right: `${100 - clipEnd * 2}%` }} /></div><div className="timeInputs"><button onClick={() => setClipStart(3)}>00:{String(clipStart).padStart(2, '0')}</button><button onClick={() => setClipEnd(31)}>00:{String(clipEnd).padStart(2, '0')}</button><button onClick={() => setDownloadModal(true)}>{clipEnd - clipStart}초 클립</button></div></div><div className="folderBox"><div className="boxHead"><Archive size={14} /> 폴더</div>{folderStats.map((folder: any) => <button className={`folderItem ${selected.folder === folder.name ? 'currentFolder' : ''}`} key={folder.name} onClick={() => assignFolder(folder.name)}><i style={{ background: folder.color }} /><span>{folder.name}</span><em>{folder.count}</em></button>)}</div></aside>; }
+function DetailPanel({ selected, peers = [], folderStats, clipStart, clipEnd, setClipStart, setClipEnd, setDownloadModal, assignFolder }: any) { return <aside className="detailPanel"><div className="selectedPreview"><div className="phoneFrame"><VideoPreview video={selected} /></div><div><span className="miniLabel">선택한 영상</span><h2>{selected.title}</h2><p>{selected.template} · {selected.category} · {displayUploaded(selected)}</p><p className="miniLabel" style={{ marginTop: 4, opacity: .7 }}>출처 {previewLabel(selected)} · 수집 {formatSyncTime(selected.lastSampledAt ?? null)}</p></div></div><VidiqInsightPanel selected={selected} peers={peers} /><div className="clipBox"><div className="boxHead"><Download size={14} /> 구간 선택 다운로드</div><div className="timeline"><span style={{ left: `${clipStart * 2}%` }} /><span style={{ left: `${clipEnd * 2}%` }} /><div style={{ left: `${clipStart * 2}%`, right: `${100 - clipEnd * 2}%` }} /></div><div className="timeInputs"><button onClick={() => setClipStart(3)}>00:{String(clipStart).padStart(2, '0')}</button><button onClick={() => setClipEnd(31)}>00:{String(clipEnd).padStart(2, '0')}</button><button onClick={() => setDownloadModal(true)}>{clipEnd - clipStart}초 클립</button></div></div><div className="folderBox"><div className="boxHead"><Archive size={14} /> 폴더</div>{folderStats.map((folder: any) => <button className={`folderItem ${selected.folder === folder.name ? 'currentFolder' : ''}`} key={folder.name} onClick={() => assignFolder(folder.name)}><i style={{ background: folder.color }} /><span>{folder.name}</span><em>{folder.count}</em></button>)}</div></aside>; }
 function RankingsPage(props: any) {
   const { tab, setTab } = props;
   return <><Hero eyebrow="트렌드 랭킹" title="지금 터진 영상과 채널을 한 화면에서." desc="절대 조회수가 아니라 구독자 대비 배율·신선 속도로 정렬한 터진 영상 랭킹과, 그 영상을 만든 채널 랭킹을 탭으로 나눠 봅니다." stats={[[String(props.videos.length), '영상'], [props.videos[0]?.breakout ? String(props.videos[0].breakout.score) : '—', '최고 터진 점수']]} />
@@ -694,7 +706,7 @@ function HoverPreviewCard({ video, youtubeId, anchor }: { video: VideoItem; yout
       <div className="hoverPreviewMeta">
         <h4>{video.title}</h4>
         <p>{video.channel}</p>
-        <div className="hoverPreviewStats"><span>조회 {video.views}</span><span>{displayUploaded(video.uploaded)}</span></div>
+        <div className="hoverPreviewStats"><span>조회 {video.views}</span><span>{displayUploaded(video)}</span></div>
         <div className="hoverPreviewActions">
           <span className={video.saved ? 'saved' : ''} title="저장"><Star size={13} /></span>
           <span title="분석"><BarChart3 size={13} /></span>
